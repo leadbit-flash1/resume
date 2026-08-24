@@ -1,0 +1,55 @@
+
+testscene6.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+testScene6/L0
+  rotate: false
+  xy: 1, 1
+  size: 614, 471
+  orig: 614, 471
+  offset: 0, 0
+  index: -1
+testScene6/L1
+  rotate: false
+  xy: 1, 474
+  size: 614, 397
+  orig: 614, 397
+  offset: 0, 0
+  index: -1
+testScene6/bl1
+  rotate: false
+  xy: 1, 873
+  size: 137, 52
+  orig: 137, 52
+  offset: 0, 0
+  index: -1
+testScene6/bl2
+  rotate: false
+  xy: 1, 927
+  size: 58, 80
+  orig: 58, 80
+  offset: 0, 0
+  index: -1
+testScene6/cap1
+  rotate: false
+  xy: 61, 1000
+  size: 21, 20
+  orig: 21, 20
+  offset: 0, 0
+  index: -1
+testScene6/cap2
+  rotate: false
+  xy: 61, 973
+  size: 25, 25
+  orig: 25, 25
+  offset: 0, 0
+  index: -1
+testScene6/bl3
+  rotate: false
+  xy: 61, 927
+  size: 28, 44
+  orig: 28, 44
+  offset: 0, 0
+  index: -1

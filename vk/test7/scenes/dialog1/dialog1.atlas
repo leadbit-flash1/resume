@@ -1,0 +1,20 @@
+
+dialog1.png
+size: 2048,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+dialog1
+  rotate: false
+  xy: 661, 1
+  size: 658, 709
+  orig: 658, 709
+  offset: 0, 0
+  index: -1
+dialog1hair
+  rotate: false
+  xy: 1, 1
+  size: 658, 709
+  orig: 658, 709
+  offset: 0, 0
+  index: -1

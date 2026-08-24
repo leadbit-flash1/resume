@@ -1,0 +1,48 @@
+
+testscene3.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+testScene3/layer0
+  rotate: false
+  xy: 1, 617
+  size: 614, 307
+  orig: 614, 307
+  offset: 0, 0
+  index: -1
+testScene3/lightning1
+  rotate: false
+  xy: 1, 926
+  size: 427, 86
+  orig: 427, 86
+  offset: 0, 0
+  index: -1
+testScene3/plane1
+  rotate: false
+  xy: 701, 926
+  size: 150, 50
+  orig: 150, 50
+  offset: 0, 0
+  index: -1
+testScene3/layer1
+  rotate: false
+  xy: 1, 1
+  size: 614, 614
+  orig: 614, 614
+  offset: 0, 0
+  index: -1
+testScene3/crate1
+  rotate: false
+  xy: 430, 926
+  size: 142, 91
+  orig: 142, 91
+  offset: 0, 0
+  index: -1
+testScene3/crate2
+  rotate: false
+  xy: 574, 926
+  size: 125, 64
+  orig: 125, 64
+  offset: 0, 0
+  index: -1

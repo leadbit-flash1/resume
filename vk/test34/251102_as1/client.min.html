@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Asteroids</title>
+</head>
+<body style="margin:0;padding:0;overflow:hidden;background:#000;touch-action:none;">
+<canvas id="canvas"></canvas>
+<script src="client.min1.js"></script>
+<script>
+window.TG = {
+  post: function(type, data) {
+    if (window.TelegramWebviewProxy) {
+      TelegramWebviewProxy.postEvent(type, JSON.stringify(data));
+    } else if (window.external && window.external.notify) {
+      window.external.notify(JSON.stringify({eventType: type, eventData: data}));
+    } else if (window.parent != window) {
+      window.parent.postMessage(JSON.stringify({eventType: type, eventData: data}), '*');
+    }
+  },
+  setBackgroundColor: function(c) {
+    this.post('web_app_set_background_color', {color: c});
+  },
+  setHeaderColor: function(c) {
+    this.post('web_app_set_header_color', {color: c});
+  },
+  setBottomBarColor: function(c) {
+    this.post('web_app_set_bottom_bar_color', {color: c});
+  }
+};
+
+// Usage:
+TG.setBackgroundColor("#000000");
+TG.setHeaderColor("#000000");
+TG.setBottomBarColor("#000000");
+</script>
+</body>
+</html>

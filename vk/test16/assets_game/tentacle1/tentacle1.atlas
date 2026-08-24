@@ -1,0 +1,13 @@
+
+tentacle1.png
+size: 256,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+tentacle1
+  rotate: false
+  xy: 1, 1
+  size: 194, 510
+  orig: 194, 510
+  offset: 0, 0
+  index: -1

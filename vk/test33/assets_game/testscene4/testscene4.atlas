@@ -1,0 +1,27 @@
+
+testscene4.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+testScene4/L3_l0
+  rotate: false
+  xy: 1, 1
+  size: 614, 551
+  orig: 614, 551
+  offset: 0, 0
+  index: -1
+testScene4/L3_l1
+  rotate: false
+  xy: 1, 554
+  size: 614, 463
+  orig: 614, 463
+  offset: 0, 0
+  index: -1
+testScene4/L3_l2
+  rotate: false
+  xy: 617, 1
+  size: 212, 277
+  orig: 212, 277
+  offset: 0, 0
+  index: -1

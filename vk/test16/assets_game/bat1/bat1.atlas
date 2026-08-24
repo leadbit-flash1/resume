@@ -1,0 +1,20 @@
+
+bat1.png
+size: 256,256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+bat2
+  rotate: false
+  xy: 1, 1
+  size: 160, 165
+  orig: 160, 165
+  offset: 0, 0
+  index: -1
+bat1
+  rotate: false
+  xy: 163, 1
+  size: 92, 154
+  orig: 92, 160
+  offset: 0, 0
+  index: -1

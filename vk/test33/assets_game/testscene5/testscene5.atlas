@@ -1,0 +1,27 @@
+
+testscene5.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+testScene5/L4_0
+  rotate: false
+  xy: 1, 1
+  size: 614, 514
+  orig: 614, 514
+  offset: 0, 0
+  index: -1
+testScene5/L4_2
+  rotate: false
+  xy: 617, 1
+  size: 96, 197
+  orig: 96, 197
+  offset: 0, 0
+  index: -1
+testScene5/L4_1
+  rotate: false
+  xy: 1, 517
+  size: 614, 410
+  orig: 614, 410
+  offset: 0, 0
+  index: -1

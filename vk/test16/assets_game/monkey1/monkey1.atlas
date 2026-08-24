@@ -1,0 +1,13 @@
+
+monkey1.png
+size: 512,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+image-removebg-preview (13)
+  rotate: false
+  xy: 1, 1
+  size: 500, 500
+  orig: 500, 500
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,124 @@
+vec4 segments[19];
+vec4 segmentsC[19];
+
+
+vec3 solveCubic(float a, float b, float c)
+{
+   float p = b - a*a / 3.0, p3 = p*p*p;
+   float q = a * (2.0*a*a - 9.0*b) / 27.0 + c;
+   float d = q*q + 4.0*p3 / 27.0;
+   float offset = -a / 3.0;
+   if(d >= 0.0) { 
+      float z = sqrt(d);
+      vec2 x = (vec2(z, -z) - q) / 2.0;
+      vec2 uv = sign(x)*pow(abs(x), vec2(1.0/3.0));
+	  
+	  
+	  
+	//if( abs(p3/27.) < q*q*0.001 ) 
+	//{
+	//return vec3(0.);
+	//	if( q <0. )
+	//		return vec3(uv.x +  offset + p / ( 3. * -pow(-q,1./3.) ) );
+	//	else
+	//		return vec3(uv.y +  offset + p / ( 3. * pow(q,1./3.) )	);
+	//}
+		if(uv.x==0.)
+			return vec3(uv.y +  offset + p / ( 3. * pow(q, 1./3.) )	);
+		else	  
+		if(uv.y==0.)
+			return vec3(uv.x +  offset + p / ( 3. * -pow(-q, 1./3.) ) );
+		else
+			return vec3(offset + uv.x + uv.y);
+   }
+   float v = acos(-sqrt(-27.0 / p3) * q / 2.0) / 3.0;
+   float m = cos(v), n = sin(v)*1.732050808;
+   return vec3(m + m, -n - m, n - m) * sqrt(-p / 3.0) + offset;
+}
+
+
+vec3 sdBezier(vec2 A, vec2 B, vec2 C, vec2 p)
+{
+   B = mix(B + vec2(1e-4), B, abs(sign(B * 2.0 - A - C)));
+   vec2 a = B - A, b = A - B * 2.0 + C, c = a * 2.0, d = A - p;
+   vec3 k = vec3(3.*dot(a,b),2.*dot(a,a)+dot(d,b),dot(d,a)) / dot(b,b);
+
+   vec2 t = clamp(solveCubic(k.x, k.y, k.z).xy, 0.0001, 0.9999);
+   vec2 dp1 = d + (c + b*t.x)*t.x;
+   float d1 = dot(dp1, dp1);
+   vec2 dp2 = d + (c + b*t.y)*t.y;
+   float d2 = dot(dp2, dp2);
+
+   // note: 3rd root is actually never closest, we can just ignore it
+     
+   vec4 r = (d1 < d2) ? vec4(d1, t.x, dp1) : vec4(d2, t.y, dp2);
+   
+   // Sign is just cross product with gradient
+   vec2 g = 2.*b*r.y + c;
+   float s =  sign(g.x*r.w - g.y*r.z);
+   
+   float dist = sqrt(r.x);
+   return vec3(s*dist, r.y, dist*dist);
+
+}
+vec2 pingpong(vec2 x) { return 0.5-abs(fract(x) - 0.5); }
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+segments[0]=vec4(0.2998046875,0.26904296875,0.5908203125,0.31591796875);
+segmentsC[0]=vec4(0.5458984375,0.2216796875,0.23333333333333334,0.);
+segments[1]=vec4(0.5908203125,0.31591796875,0.52783203125,0.45849609375);
+segmentsC[1]=vec4(0.6357421875,0.41015625,0.13333333333333333,0.);
+segments[2]=vec4(0.52783203125,0.45849609375,0.38330078125,0.5576171875);
+segmentsC[2]=vec4(0.419921875,0.5068359375,0.1,0.);
+segments[3]=vec4(0.38330078125,0.5576171875,0.3642578125,0.65087890625);
+segmentsC[3]=vec4(0.3466796875,0.6083984375,0.06666666666666667,0.);
+segments[4]=vec4(0.3642578125,0.65087890625,0.419921875,0.71630859375);
+segmentsC[4]=vec4(0.3818359375,0.693359375,0.03333333333333333,0.);
+segments[5]=vec4(0.419921875,0.71630859375,0.50732421875,0.72802734375);
+segmentsC[5]=vec4(0.4580078125,0.7392578125,0.06666666666666667,0.);
+segments[6]=vec4(0.50732421875,0.72802734375,0.5693359375,0.669921875);
+segmentsC[6]=vec4(0.556640625,0.716796875,0.06666666666666667,0.);
+segments[7]=vec4(0.5693359375,0.669921875,0.63720703125,0.57568359375);
+segmentsC[7]=vec4(0.58203125,0.623046875,0.06666666666666667,0.);
+segments[8]=vec4(0.63720703125,0.57568359375,0.73779296875,0.52587890625);
+segmentsC[8]=vec4(0.6923828125,0.5283203125,0.06666666666666667,0.);
+segments[9]=vec4(0.73779296875,0.52587890625,0.8037109375,0.5703125);
+segmentsC[9]=vec4(0.783203125,0.5234375,0.03333333333333333,0.);
+segments[10]=vec4(0.8037109375,0.5703125,0.80517578125,0.671875);
+segmentsC[10]=vec4(0.82421875,0.6171875,0.06666666666666667,0.);
+segments[11]=vec4(0.80517578125,0.671875,0.72119140625,0.794921875);
+segmentsC[11]=vec4(0.7861328125,0.7265625,0.1,0.);
+segments[12]=vec4(0.72119140625,0.794921875,0.51025390625,0.876953125);
+segmentsC[12]=vec4(0.65625,0.86328125,0.16666666666666666,0.);
+segments[13]=vec4(0.51025390625,0.876953125,0.2578125,0.8203125);
+segmentsC[13]=vec4(0.3642578125,0.890625,0.16666666666666666,0.);
+segments[14]=vec4(0.2578125,0.8203125,0.17626953125,0.5830078125);
+segmentsC[14]=vec4(0.1513671875,0.75,0.16666666666666666,0.);
+segments[15]=vec4(0.17626953125,0.5830078125,0.30029296875,0.26904296875);
+segmentsC[15]=vec4(0.201171875,0.416015625,0.23333333333333334,0.);
+segments[16]=vec4(0.30029296875,0.26904296875,0.2265625,0.087890625);
+segmentsC[16]=vec4(0.3994140625,0.1220703125,0.16666666666666666,0.);
+segments[17]=vec4(0.2265625,0.087890625,0.0537109375,0.18505859375);
+segmentsC[17]=vec4(0.0537109375,0.0537109375,0.16666666666666666,0.);
+segments[18]=vec4(0.0537109375,0.18505859375,0.2998046875,0.26904296875);
+segmentsC[18]=vec4(0.0537109375,0.31640625,0.2,0.);
+    float s1=5.;
+	vec2 uVu = 1./s1*((fragCoord+iMouse.xy*2.*s1)-iResolution.xy)/iResolution.y;
+    //vec2 m = (2.0*iMouse.xy-iResolution.xy)/iResolution.y;
+    vec3 tmp1 = vec3(0.0, 0.0, 0.0001);
+    vec4 splat4=vec4(0.,0.,0.,1.);
+	for (int i = 0; i < 19; i++) {
+            if (all(greaterThan(segments[i], vec4(0.0001)))) {
+                vec3 tmp1_1 = sdBezier(segments[i].xy, segmentsC[i].xy, segments[i].zw, uVu);
+                if (tmp1.z > tmp1_1.z) {
+                    tmp1 = tmp1_1;
+                    tmp1.y = tmp1.y*segmentsC[i].z;//;
+                }
+            }
+        }
+        
+        splat4 = texture(iChannel0, pingpong(tmp1.xy * 30.0), -1.5);
+
+	fragColor = splat4;
+}

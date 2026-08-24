@@ -1,0 +1,8 @@
+{
+  "yup": true,
+  "scale": 1,
+  "models": [
+    { "id": "stone1", "name": "stone",  "obj": "models/stone1.obj",  "tex": "models/stone1.jpg" },
+    { "id": "tree1", "name": "Tree",  "obj": "models/tree2.obj",  "tex": "models/tree2.jpg" }
+  ]
+}

@@ -1,0 +1,20 @@
+
+sceneoasis1.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+sceneOasis1/bg1
+  rotate: false
+  xy: 1, 1
+  size: 614, 614
+  orig: 614, 614
+  offset: 0, 0
+  index: -1
+sceneOasis1/mask1
+  rotate: false
+  xy: 617, 1
+  size: 379, 231
+  orig: 379, 231
+  offset: 0, 0
+  index: -1

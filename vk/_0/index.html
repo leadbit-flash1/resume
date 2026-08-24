@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:image" content="./favicon.png" />
+		<script src="https://frigarui.md/platform1/vk/_stats/analytics.js" defer></script>
+
+
+	<meta id="viewport" name="viewport" content="width=0, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes"> 
+	
+	<script>
+		window.addEventListener ("touchmove", function (event) { event.preventDefault (); }, {passive:false});
+		if (typeof window.devicePixelRatio != 'undefined' && window.devicePixelRatio > 2) {
+			var meta = document.getElementById ("viewport");
+			//meta.setAttribute ('content', 'width=device-width, initial-scale=' + (2 / window.devicePixelRatio) + ', user-scalable=no');
+		}
+		
+		
+	</script>
+	
+
+	
+	<!--		
+	<script src="three.js"></script>
+	<script src="inflate.min.js"></script>
+	<script src="FBXLoader.js"></script>
+	<script src="ConvexObjectBreaker.js"></script>
+	<script src="ConvexGeometry.js"></script>
+	<script src="QuickHull.js"></script>
+	<script src="ThreeCSG.js"></script>
+	<script src="TrailRenderer.js"></script>
+	<script src="GPUParticleSystem.js"></script>
+	<script src="BVH.js"></script>
+	<script src="DecalGeometry.js"></script>
+	<script src="GPUBeam.js"></script>
+
+	-->
+	
+		
+	<script src="lib/lib2.js"></script>
+	
+
+	
+
+
+
+	
+
+
+
+
+	
+	<script src="script.js"></script>
+
+	
+	<style>
+		html,body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+	</style>
+	
+	</head>
+    <body>
+		<div id="main" style="width:100%;height:100%;"></div>
+		<script>
+		var FBINSTANT_READY=null;
+		var FACEBOOK_CONNECTED=null;
+		var FACEBOOK_CONNECTED_FBID=null;
+		var DESKTOP_ONLY=1;
+		var DATA1=null;
+		window.onload=function()
+		{
+		
+			DATA1={LEVELID:1,soundVolume:1,musicVolume:1}
+		
+			document.getElementById("main").loadData(DATA1);
+		
+		};
+		function startGame()
+		{
+		}
+		function saveData(d1)
+		{
+			//console.log(d1);
+		}
+		function hideSplash()
+		{
+
+		}
+		function showSplash()
+		{
+
+		}
+		function getBonus(n1)
+		{
+			document.getElementById('main').giveBonus(n1);
+		}
+		
+		
+		function connect1()
+		{
+			setTimeout(function()
+			{
+				FACEBOOK_CONNECTED=1;
+				document.getElementById("main").loadData(DATA1);
+			},500);
+			
+		}
+		
+		function logout1()
+		{
+			FACEBOOK_CONNECTED=null;
+		}
+		
+		function share1()
+		{
+		}
+		
+		function invite1()
+		{
+		}
+		
+		function like1()
+		{
+		}
+
+		</script>
+    </body>
+</html> 

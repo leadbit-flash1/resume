@@ -1,0 +1,20 @@
+
+quest1.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+quest1/planet1
+  rotate: false
+  xy: 1, 617
+  size: 307, 307
+  orig: 307, 307
+  offset: 0, 0
+  index: -1
+quest1/layer1
+  rotate: false
+  xy: 1, 1
+  size: 614, 614
+  orig: 614, 614
+  offset: 0, 0
+  index: -1

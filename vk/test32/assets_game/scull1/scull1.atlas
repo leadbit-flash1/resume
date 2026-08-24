@@ -1,0 +1,27 @@
+
+scull1.png
+size: 512,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+scull1_3
+  rotate: false
+  xy: 1, 1
+  size: 251, 215
+  orig: 251, 215
+  offset: 0, 0
+  index: -1
+scull1_2
+  rotate: false
+  xy: 1, 218
+  size: 123, 99
+  orig: 123, 99
+  offset: 0, 0
+  index: -1
+scull1_1
+  rotate: false
+  xy: 254, 1
+  size: 194, 235
+  orig: 194, 235
+  offset: 0, 0
+  index: -1

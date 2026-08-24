@@ -1,0 +1,34 @@
+
+testscene7.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+testScene7/L0
+  rotate: false
+  xy: 1, 861
+  size: 614, 151
+  orig: 614, 151
+  offset: 0, 0
+  index: -1
+testScene7/L2
+  rotate: false
+  xy: 1, 617
+  size: 614, 242
+  orig: 614, 242
+  offset: 0, 0
+  index: -1
+testScene7/L1_1
+  rotate: false
+  xy: 617, 1
+  size: 404, 362
+  orig: 404, 362
+  offset: 0, 0
+  index: -1
+testScene7/L1_0
+  rotate: false
+  xy: 1, 1
+  size: 614, 614
+  orig: 614, 614
+  offset: 0, 0
+  index: -1

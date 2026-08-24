@@ -1,0 +1,83 @@
+
+testscene3b1.png
+size: 128,128
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+testScene3/b1
+  rotate: false
+  xy: 1, 1
+  size: 80, 72
+  orig: 86, 78
+  offset: 2, 3
+  index: -1
+testScene3/b1font/1
+  rotate: false
+  xy: 115, 1
+  size: 10, 21
+  orig: 10, 21
+  offset: 0, 0
+  index: -1
+testScene3/b1font/5
+  rotate: false
+  xy: 99, 1
+  size: 14, 21
+  orig: 14, 21
+  offset: 0, 0
+  index: -1
+testScene3/b1font/0
+  rotate: false
+  xy: 83, 24
+  size: 14, 21
+  orig: 14, 21
+  offset: 0, 0
+  index: -1
+testScene3/b1font/2
+  rotate: false
+  xy: 83, 70
+  size: 14, 21
+  orig: 14, 21
+  offset: 0, 0
+  index: -1
+testScene3/b1font/9
+  rotate: false
+  xy: 99, 70
+  size: 14, 21
+  orig: 14, 21
+  offset: 0, 0
+  index: -1
+testScene3/b1font/6
+  rotate: false
+  xy: 99, 24
+  size: 14, 21
+  orig: 14, 21
+  offset: 0, 0
+  index: -1
+testScene3/b1font/8
+  rotate: false
+  xy: 83, 1
+  size: 14, 21
+  orig: 14, 21
+  offset: 0, 0
+  index: -1
+testScene3/b1font/7
+  rotate: false
+  xy: 99, 47
+  size: 14, 21
+  orig: 14, 21
+  offset: 0, 0
+  index: -1
+testScene3/b1font/3
+  rotate: false
+  xy: 83, 47
+  size: 14, 21
+  orig: 14, 21
+  offset: 0, 0
+  index: -1
+testScene3/b1font/4
+  rotate: false
+  xy: 1, 75
+  size: 14, 21
+  orig: 14, 21
+  offset: 0, 0
+  index: -1

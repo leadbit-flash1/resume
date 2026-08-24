@@ -1,0 +1,13 @@
+
+lian1.png
+size: 128,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+lian1
+  rotate: false
+  xy: 1, 1
+  size: 100, 494
+  orig: 100, 494
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,13 @@
+
+dialog1.png
+size: 512,2048
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+tutorial_char3_inv
+  rotate: false
+  xy: 1, 1
+  size: 365, 1023
+  orig: 365, 1023
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta property="twitter:card" content="summary_large_image" />
+	<meta property="twitter:image" content="./favicon.png" />
+	<script src="https://frigarui.md/platform1/vk/_stats/analytics.js" defer></script>
+	
+	<meta charset="utf-8">
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" /> 
+	<title>jewels11</title>
+	
+	<meta id="viewport" name="viewport" content="width=604, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	
+	
+	
+	
+	<script type="text/javascript" src="./lib/howler.min.js"></script>
+	<script type="text/javascript" src="./lib/pako.min.js"></script>
+	<script type="text/javascript" src="./lib/FileSaver.min.js"></script>
+	<script type="text/javascript" src="./splash2.js"></script>	
+			<script src="three.js"></script>
+			<script src="GLTFLoader.js"></script>
+	<script type="text/javascript" src="./jewels11final.js"></script>
+	
+	<script>
+		window.addEventListener ("touchmove", function (event) { event.preventDefault (); }, false);
+		if (typeof window.devicePixelRatio != 'undefined' && window.devicePixelRatio > 2) {
+			var meta = document.getElementById ("viewport");
+			//meta.setAttribute ('content', 'width=device-width, initial-scale=' + (2 / window.devicePixelRatio) + ', user-scalable=no');
+		}
+	</script>
+	
+	<style>
+		html,body { margin: 0; padding: 0; height: 100%; background-color: #000000;background:url('bg1.jpg');background-size:cover;} 
+		#openfl-content { background: #000000; width: 604px; height: 100%; margin:auto;position:relative;box-shadow: 0px 0px 80px 10px #737;} 
+	</style>
+	
+</head>
+<body>
+	
+	<noscript>This webpage makes extensive use of JavaScript. Please enable JavaScript in your web browser to view this page.</noscript>
+	
+	<div id="openfl-content"></div>
+<script>
+(()=>{const TARGET_WIDTH=604;const COLOR="#000";const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);let isInIframe=!1;try{isInIframe=(window.self!==window.top)||(/Telegram/i.test(navigator.userAgent))}catch(e){isInIframe=!0}
+window.innerWidth=TARGET_WIDTH;if(isInIframe){const actualWidth=document.documentElement.clientWidth;const actualHeight=document.documentElement.clientHeight;const scale=actualWidth/TARGET_WIDTH;window.innerHeight=actualHeight/scale}
+var i1=setInterval(()=>{let canvas=document.getElementById("openfl-content");if(!canvas)return;clearInterval(i1);/*document.documentElement.style.cssText=`margin:0;padding:0;height:100%;background:${COLOR};`;document.body.style.cssText=`margin:0;padding:0;height:100%;background:${COLOR} url('bg1.jpg') center/cover;overflow:hidden;`;*/let container=document.createElement("div");container.style.cssText=`width:${TARGET_WIDTH}px;height:100%;position:relative;margin:auto;box-shadow:0 0 80px 10px #737`;document.body.appendChild(container);container.appendChild(canvas);if(isMobile||isInIframe){const applyScale=()=>{const actualWidth=document.documentElement.clientWidth;const actualHeight=document.documentElement.clientHeight;const scale=actualWidth/TARGET_WIDTH;if(isInIframe){window.innerHeight=actualHeight/scale}
+Object.assign(container.style,{height:`${actualHeight / scale}px`,transform:`scale(${scale})`,transformOrigin:"top left",})};applyScale();if(isInIframe)window.addEventListener('resize',applyScale);}},0)})()
+</script>	
+	<script type="text/javascript">
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
+	//var FACEBOOK_CONNECTED=null;
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
+	var MediaCache={};
+	var MediaDebug=0;
+	
+						if(typeof Media=='undefined')
+						{
+							window.Media=function(fname1)
+							{
+								var this1=this;
+									if(MediaDebug)console.log(this1);
+								this1.src=fname1;
+								this1.play=function(){if(MediaDebug)console.log("play:",this1.src)};
+								this1.stop=function(){if(MediaDebug)console.log("stop:",this1.src)};
+								this1.setVolume=function(a){if(MediaDebug)console.log("volume:",this1.src,a)};
+							}
+						}//imitation
+
+	function MediaPlaySound(fname1,loop1=1,stop1=false,channel1)
+	{
+		if(stop1==true)MediaSoundMixer.stopAll();
+		
+		if(MediaCache[fname1]==null)MediaCache[fname1]=new Media(fname1);//,function(){console.log("OK")},function(error){console.log("ERR",error)});
+		var s1=MediaCache[fname1];
+		
+		s1.loop1=loop1;
+		s1.channel1=channel1;
+		s1.statusCallback=function(status)
+		{
+			/*console.log(status);*/
+			if(status==4)
+			{
+				if(this.loop1>1)
+				{
+					this.play();
+					this.setVolume(s1.channel1.soundTransform.volume);
+					this.loop1--;
+				}
+				else
+				{
+					var i1=this.channel1.arr1.indexOf(this);
+					if(i1!=-1)this.channel1.arr1.splice(i1,1);
+					if(MediaDebug)console.log(this.channel1,i1)
+				}
+			}
+		};
+		
+		if(s1.channel1.arr1.indexOf(s1)==-1)s1.channel1.arr1.push(s1);
+		s1.play();
+		s1.setVolume(s1.channel1.soundTransform.volume);
+		
+	}
+
+
+	function MediaSoundTransform(volume1=1)
+	{
+		var this1=this;
+		this1.volume=volume1;
+	}
+
+	function MediaSoundChannel(a=null,soundTransform1)
+	{
+		var this1=this;
+			if(MediaDebug)console.log(this1);
+			MediaSoundMixer.channels1.push(this1);
+		this1.arr1=[];
+		this1.soundTransform1=soundTransform1!=null?soundTransform1:new MediaSoundTransform(1);
+		
+		Object.defineProperty(this, "soundTransform", { get: function(){return this1.soundTransform1},set: function (t1) { this1.soundTransform1=t1;this1.updateVolume(); } });
+		
+		this1.stop=function()
+		{
+			if(MediaDebug)console.log("stop",this1);
+			for(var i in this1.arr1)this1.arr1[i].loop1=1;
+			for(var i in this1.arr1)this1.arr1[i].stop();
+			this1.arr1.splice(0,this1.arr1.length);
+		}
+		
+		this1.updateVolume=function()
+		{
+			for(var i in this1.arr1)this1.arr1[i].setVolume(this1.soundTransform1.volume*MediaSoundMixer.soundTransform1.volume);
+		}
+	}
+	
+	function MediaSoundMixer(){}
+	MediaSoundMixer.channels1=[]
+	MediaSoundMixer.stopAll=function()
+	{
+		for(var i in this.channels1)this.channels1[i].stop();
+	}
+	MediaSoundMixer.updateVolume=function()
+	{
+		for(var i in this.channels1)this.channels1[i].updateVolume();
+	}
+	MediaSoundMixer.soundTransform1=new MediaSoundTransform(1);
+	Object.defineProperty(MediaSoundMixer, "soundTransform", { get: function(){return this.soundTransform1},set: function (t1) { this.soundTransform1=t1;this.updateVolume(); } });
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	
+		function getLanguage()
+        {
+            var l1=navigator.language.split("-")[0];
+            if(l1=="en")return 0;
+            if(l1=="fr")return 1;
+            if(l1=="de")return 2;
+            return 0;
+        }
+		var EMBED_SH;
+		document.addEventListener("DOMContentLoaded", function() {
+		setTimeout(()=>{
+		var tmp1=document.getElementById("openfl-content");
+		EMBED_SH=Math.floor(Math.max(604*1.33,Math.min(604*2,604/tmp1.offsetWidth*tmp1.offsetHeight)));
+		tmp1.style.width=tmp1.offsetWidth+"px";
+		tmp1.style.height=EMBED_SH+"px"; 
+		tmp1.scrollIntoView();
+		lime.embed ("jewels11", "openfl-content", 604, EMBED_SH, { parameters: {} });
+		},100);
+		});
+		onfocus=function()
+		{
+			document.getElementById('openfl-content').pauseOff();
+		}
+	
+		onblur=function()
+		{
+			document.getElementById('openfl-content').pauseOn();
+		}
+		document.addEventListener('visibilitychange', function() {
+			if (document.visibilityState === 'visible') 
+			{
+				document.getElementById('openfl-content').pauseOff();
+			}
+			else 
+			if (document.visibilityState === 'hidden') 
+			{
+				document.getElementById('openfl-content').pauseOn();
+			} 
+		});
+	</script>
+	
+</body>
+</html>

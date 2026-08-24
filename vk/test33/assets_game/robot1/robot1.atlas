@@ -1,0 +1,20 @@
+
+robot1.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+robot1
+  rotate: false
+  xy: 387, 1
+  size: 384, 384
+  orig: 384, 384
+  offset: 0, 0
+  index: -1
+robot1a
+  rotate: false
+  xy: 1, 1
+  size: 384, 384
+  orig: 384, 384
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,48 @@
+
+necromancer1.png
+size: 512,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+necromancer1_06
+  rotate: false
+  xy: 209, 157
+  size: 59, 69
+  orig: 59, 69
+  offset: 0, 0
+  index: -1
+necromancer1_03
+  rotate: false
+  xy: 110, 157
+  size: 97, 94
+  orig: 97, 94
+  offset: 0, 0
+  index: -1
+skeleton1_06
+  rotate: false
+  xy: 311, 1
+  size: 115, 168
+  orig: 125, 168
+  offset: 0, 0
+  index: -1
+necromancer1_02
+  rotate: false
+  xy: 1, 1
+  size: 167, 154
+  orig: 167, 154
+  offset: 0, 0
+  index: -1
+necromancer1_01
+  rotate: false
+  xy: 1, 157
+  size: 107, 100
+  orig: 107, 100
+  offset: 0, 0
+  index: -1
+necromancer1_04
+  rotate: false
+  xy: 170, 1
+  size: 139, 154
+  orig: 139, 154
+  offset: 0, 0
+  index: -1

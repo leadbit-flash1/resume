@@ -1,0 +1,62 @@
+
+scenetemple1.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+sceneTemple1/bg1
+  rotate: false
+  xy: 1, 1
+  size: 614, 614
+  orig: 614, 614
+  offset: 0, 0
+  index: -1
+sceneTemple1/be1
+  rotate: false
+  xy: 617, 1
+  size: 199, 614
+  orig: 199, 614
+  offset: 0, 0
+  index: -1
+sceneTemple1/cr6
+  rotate: false
+  xy: 818, 1
+  size: 61, 115
+  orig: 61, 115
+  offset: 0, 0
+  index: -1
+sceneTemple1/cr5
+  rotate: false
+  xy: 974, 78
+  size: 18, 34
+  orig: 18, 34
+  offset: 0, 0
+  index: -1
+sceneTemple1/cr4
+  rotate: false
+  xy: 994, 78
+  size: 14, 26
+  orig: 14, 26
+  offset: 0, 0
+  index: -1
+sceneTemple1/cr3
+  rotate: false
+  xy: 974, 1
+  size: 40, 75
+  orig: 40, 75
+  offset: 0, 0
+  index: -1
+sceneTemple1/cr2
+  rotate: false
+  xy: 881, 1
+  size: 48, 88
+  orig: 48, 88
+  offset: 0, 0
+  index: -1
+sceneTemple1/cr1
+  rotate: false
+  xy: 931, 1
+  size: 41, 85
+  orig: 41, 85
+  offset: 0, 0
+  index: -1

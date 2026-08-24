@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:image" content="./favicon.png" />
+		<script src="https://frigarui.md/platform1/vk/_stats/analytics.js" defer></script>
+
+		<meta charset="utf-8" />
+		<meta id="viewport" name="viewport" content="width=0, initial-scale=1., maximum-scale=1., user-scalable=no" />
+	</head>
+
+	<body style="margin: 0;">
+		<script>
+			window.addEventListener ("touchmove", function (event) { event.preventDefault (); }, { passive: false });
+			if (typeof window.devicePixelRatio != 'undefined' && window.devicePixelRatio > 2) {
+				var meta = document.getElementById ("viewport");
+				//meta.setAttribute ('content', 'width=device-width, initial-scale=' + (2 / window.devicePixelRatio) + ', user-scalable=no');
+			}
+		</script> 
+		
+		<script src="https://yandex.ru/games/sdk/v2"></script>
+		<script>
+		var ysdk;
+		YaGames.init().then(ysdk0 => {ysdk=ysdk0;});
+		
+		function showAds(callback1,callback2)
+		{
+			var this1=this;
+			if(this1.time1==null)this1.time1=Date.now();
+			if(this1.time1>Date.now())return callback2();
+			this1.time1=Date.now()+60000;
+			ysdk.adv.showFullscreenAdv({
+				callbacks: {
+					onClose: function(wasShown) {
+					  // some action after close
+					  if(wasShown)callback1();else callback2();
+					},
+					onError: function(error) {
+					  // some action on error
+					  callback2();
+					}
+				}
+			})
+		}
+		
+		function showRewardedAds(callback1,callback2)
+		{
+			var this1=this;
+			ysdk.adv.showRewardedVideo({
+				callbacks: {
+					onOpen: () => {
+					  console.log('Video ad open.');
+					},
+					onRewarded: () => {
+					  console.log('Rewarded!');
+					  //callback1();
+					  this1.rewarded1=1;
+					},
+					onClose: () => {
+					  console.log('Video ad closed.');
+					  if(this1.rewarded1!=null)callback1();else callback2();
+					}, 
+					onError: (e) => {
+					  console.log('Error while open video ad:', e);
+					  callback2();
+					}
+				}
+			})
+		}
+		</script>
+<script>
+(()=>{const TARGET_WIDTH=375;const COLOR="#fff";const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);let isInIframe=!1;try{isInIframe=(window.self!==window.top)||(/Telegram/i.test(navigator.userAgent))}catch(e){isInIframe=!0}
+window.innerWidth=TARGET_WIDTH;if(isInIframe){const actualWidth=document.documentElement.clientWidth;const actualHeight=document.documentElement.clientHeight;const scale=actualWidth/TARGET_WIDTH;window.innerHeight=actualHeight/scale}
+var i1=setInterval(()=>{let canvas=document.querySelector("canvas");if(!canvas)return;clearInterval(i1);document.documentElement.style.cssText=`margin:0;padding:0;height:100%;background:${COLOR};`;document.body.style.cssText=`margin:0;padding:0;height:100%;background:${COLOR} url('bg1.jpg') center/cover;overflow:hidden;`;let container=document.createElement("div");container.style.cssText=`background:${COLOR};width:${TARGET_WIDTH}px;height:100%;position:${isIOS?'fixed':'relative'};margin:${isIOS?'0 ':''}auto;box-shadow:0 0 80px 10px #737`;document.body.appendChild(container);container.appendChild(canvas);if(isMobile||isInIframe){const applyScale=()=>{const actualWidth=document.documentElement.clientWidth;const actualHeight=document.documentElement.clientHeight;const scale=actualWidth/TARGET_WIDTH;if(isInIframe){window.innerHeight=actualHeight/scale}
+Object.assign(container.style,{height:`${actualHeight / scale}px`,transform:`scale(${scale})`,transformOrigin:"top left",})};applyScale();if(isInIframe)window.addEventListener('resize',applyScale);}},0)})()
+</script>		
+		<script src="three.min.js"></script>
+		<script src="fflate.min.js"></script>
+		<script src="app4.min1.js"></script>
+
+	</body>
+</html>

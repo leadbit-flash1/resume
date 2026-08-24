@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta id="viewport" name="viewport" content="width=414, user-scalable=no" />
+
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:image" content="./favicon.png" />
+
+		<style>
+		body{
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: -moz-none;
+			-o-user-select: none;
+			user-select: none;
+		}
+		html,body {position: fixed; left: 0; top: 0; right: 0; bottom: 0;touch-action: none;}
+		</style>
+	</head>
+
+	<body style="margin: 0;" oncontextmenu="return false">
+		<script>
+			window.addEventListener ("touchstart", function (event) { event.preventDefault (); }, { passive: false });
+			window.addEventListener ("touchmove", function (event) { event.preventDefault (); }, { passive: false });
+			window.addEventListener ("touchend", function (event) { event.preventDefault (); }, { passive: false });
+			if (typeof window.devicePixelRatio != 'undefined' && window.devicePixelRatio > 2) {
+				var meta = document.getElementById ("viewport");
+				//meta.setAttribute ('content', 'width=device-width, initial-scale=' + (2 / window.devicePixelRatio) + ', user-scalable=no');
+			}
+		</script> 
+		<script src="https://frigarui.md/platform1/vk/_stats/analytics.js" defer></script>
+		<!--<script>window.onerror = function(msg, url, linenumber) {alert('Error message: '+msg+'\nURL: '+url+'\nLine Number: '+linenumber);return !true;}</script>-->
+<script>
+(()=>{const TARGET_WIDTH=414;const COLOR="#000";const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);let isInIframe=!1;try{isInIframe=(window.self!==window.top)||(/Telegram/i.test(navigator.userAgent))}catch(e){isInIframe=!0}
+window.innerWidth=TARGET_WIDTH;if(isInIframe){const actualWidth=document.documentElement.clientWidth;const actualHeight=document.documentElement.clientHeight;const scale=actualWidth/TARGET_WIDTH;window.innerHeight=actualHeight/scale}
+var i1=setInterval(()=>{let canvas=document.querySelector("canvas");if(!canvas)return;clearInterval(i1);document.documentElement.style.cssText=`margin:0;padding:0;height:100%;background:${COLOR};`;document.body.style.cssText=`margin:0;padding:0;height:100%;background:${COLOR} url('bg1.jpg') center/cover;overflow:hidden;`;let container=document.createElement("div");container.style.cssText=`background:${COLOR};width:${TARGET_WIDTH}px;height:100%;position:relative;margin:auto;box-shadow:0 0 80px 10px #737`;document.body.appendChild(container);container.appendChild(canvas);if(isMobile||isInIframe){const applyScale=()=>{const actualWidth=document.documentElement.clientWidth;const actualHeight=document.documentElement.clientHeight;const scale=actualWidth/TARGET_WIDTH;if(isInIframe){window.innerHeight=actualHeight/scale}
+Object.assign(container.style,{height:`${actualHeight / scale}px`,transform:`scale(${scale})`,transformOrigin:"top left",})};applyScale();if(isInIframe)window.addEventListener('resize',applyScale);}},0)})()
+</script>		
+		<script src="./three.min.js"></script>
+		<script src="./app33.min1.js"></script>
+		
+		<script>
+		function getXml1()
+		{
+		
+			maindata=JSON.parse(window.localStorage.getItem('maindata'));
+				
+			if(!maindata||parseInt(maindata.V1|0)<3)
+			{
+			
+			
+				maindata=
+				{"V1":"3","mapdata":
+
+					{"player":
+						{"fbid":"10101010101",
+						"name":"Player",
+						"photo":"test_photo/1.jpg",
+						"lifes":"5",
+						"scores":{},
+						"coins":"0",
+						"unlocks":"",
+						"lifetimestamp":String(Math.floor(Date.now()/1000)),
+						"timestamp":String(Math.floor(Date.now()/1000)),
+						"gts":0,
+						"sts":0,
+						"bts":0,
+						"sound":"-1:-1:-1:-1:-1",
+						"music":"1:1",
+						"dailybonus":"1"
+						},
+						"friend":[
+						/*"id01;Joseph;test_photo/6.jpg;helptimestamp;1;request2;help1;help2;1;3230;4;5;6;7;9;0",
+						"id02;Leo;test_photo/7.jpg;helptimestamp;1;request2;help1;help2;1;3230;2;3;6;7;9;0",
+						"id03;Michel;test_photo/8.jpg;helptimestamp;1;request2;help1;help2;1;3230;5;6;7;9;0",
+						"id04;Andre;test_photo/9.jpg;helptimestamp;1;request2;help1;help2;1;3230;2;3;4;5;6;7;9;0",
+						"id15;Kate;test_photo/3.jpg;helptimestamp;1;request2;1;help1;help3;2;2;6;7;8;9;0"*/
+						]
+
+					}
+
+				};//maindata
+
+			}
+			
+			let lifes=parseInt(maindata.mapdata.player.lifes)||0;
+			let timeRest=Math.floor(Date.now()/1000)-(parseInt(maindata.mapdata.player.lifetimestamp)||0);
+			let lifesPlus=Math.floor(timeRest/(25*60));
+			let timeRemained=25*60-timeRest%(25*60);
+			lifes+=lifesPlus;
+			if(lifes>5)lifes=5;
+			maindata.mapdata.player.lifes=String(lifes);
+			maindata.mapdata.player.lifetimestamp=String(timeRemained);
+			
+			
+			
+			//maindata.mapdata.player.fbid=FBInstant.player.getID();
+			//maindata.mapdata.player.name=FBInstant.player.getName();
+			//maindata.mapdata.player.name=maindata.mapdata.player.name.replace(/[^0-9a-zA-Z ]+/g,"");
+			//maindata.mapdata.player.photo=FBInstant.player.getPhoto();
+			
+			
+			maindata.mapdata.player.gts1=parseInt(maindata.mapdata.player.gts)||0;
+			maindata.mapdata.player.gts=String(Math.max(0, maindata.mapdata.player.gts1-Math.floor(Date.now()/1000)));
+			
+			maindata.mapdata.player.sts1=parseInt(maindata.mapdata.player.sts)||0;
+			maindata.mapdata.player.sts=String(Math.max(0, maindata.mapdata.player.sts1-Math.floor(Date.now()/1000)));
+			
+			maindata.mapdata.player.bts1=parseInt(maindata.mapdata.player.bts)||0;
+			
+			//if(timeRest>8*3600)maindata.mapdata.player.dailybonus="1";else maindata.mapdata.player.dailybonus="0";
+			let tmp0=24*60*60;
+			let tmp1=(maindata.mapdata.player.bts1-Math.floor(Date.now()/1000))%(tmp0);
+			if(tmp1<=0)
+			{
+				maindata.mapdata.player.bts1=String(Math.floor(Date.now()/1000 + tmp0 + tmp1*0.5));//shift on tmp1*0.5
+				let titles1=["Hey, join to my quest - let`s break the darkness together!","Эй, присоединяйся к моему путешествию - развеем тьму вместе!","Hey, rejoins mon voyage - dissipons les ténèbres ensemble!","Hey, schließe dich meiner Suche an – lass uns gemeinsam die Dunkelheit durchbrechen!"];
+				//cordova.plugins.notification.local.clearAll();
+				//cordova.plugins.notification.local.schedule({title: titles1[getLanguage()]||titles1[0],trigger: { in: tmp0 + tmp1*0.5, unit: 'second' }},null,null,{skipPermission: true});
+				maindata.mapdata.player.dailybonus="1";
+			}
+			else maindata.mapdata.player.dailybonus="0";
+
+
+			return JSON.stringify(maindata);
+			
+		}
+
+
+		function saveData(data1)
+		{
+			//cordova.plugins.notification.local.requestPermission(function (granted) {});
+		
+			let level=data1[0];
+			let locationid=data1[1];
+			let score=data1[2];
+			let lifes=data1[3];
+			let coins=data1[4];
+			let fbid=data1[5];
+			let openedLevel=data1[6];
+			let unlocks=data1[7];
+			let music=data1[8];
+			let gts=data1[9];
+			let sts=data1[10];
+					
+			//let level=10;
+			//let score=10;
+			//let lifes=5;
+			//let coins=500;
+			//let fbid=10101010;
+			//let openedLevel=0;
+			//let unlocks="1:1:1:0:1";
+			//let music="1:1";
+			let scores_arr=(maindata.mapdata.player.scores[locationid]??"0").split(";");
+			for(i=0;i<level+openedLevel;i++)
+				{
+					if(!scores_arr[i])scores_arr[i]="0";
+				}
+				scores_arr[level-1]=String(score);
+
+			maindata.mapdata.player.lifetimestamp=String(Math.floor(Date.now()/1000));
+			maindata.mapdata.player.lifes=String(lifes);
+			maindata.mapdata.player.coins=String(coins);
+			maindata.mapdata.player.sound=String(unlocks);
+			maindata.mapdata.player.scores[locationid]=scores_arr.join(";");
+			//console.log(scores_arr);
+			
+			let godtimestamp=-1;
+			if(gts=="1")godtimestamp=String(Math.floor(Date.now()/1000 + 24 * 60 * 60));
+			if(gts=="2")godtimestamp=String(Math.floor(Date.now()/1000 + 365 * 24 * 60 * 60));
+			if(godtimestamp!=-1)maindata.mapdata.player.gts1=godtimestamp;
+			
+			let spintimestamp=-1;
+			if(sts=="1")spintimestamp=String(Math.floor(Date.now()/1000 + 24 * 60 * 60));
+			if(spintimestamp!=-1)maindata.mapdata.player.sts1=spintimestamp;
+			
+			maindata.mapdata.player.music=music;
+			maindata.mapdata.player.gts=maindata.mapdata.player.gts1;
+			maindata.mapdata.player.sts=maindata.mapdata.player.sts1;
+			maindata.mapdata.player.bts=maindata.mapdata.player.bts1;
+			
+			window.localStorage.setItem('maindata', JSON.stringify(maindata));
+			
+		}
+		
+		var bonusId;
+        function getBonus(num1)
+        {
+            bonusId=num1;
+            giveBonus(bonusId);
+            //purchase1(document.getElementById('openfl-content').giveBonus,document.getElementById('openfl-content').cancelBonus);
+        }
+        
+        function getBonusMap(num1)
+        {
+            bonusId=num1;
+            giveBonusMap(bonusId);
+            //purchase1(document.getElementById('openfl-content').giveBonusMap,document.getElementById('openfl-content').cancelBonusMap);
+        }
+
+		</script>
+	</body>
+</html>

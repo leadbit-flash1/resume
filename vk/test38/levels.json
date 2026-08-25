@@ -5,7 +5,7 @@
    "spawn": [5.5,7.5],
    "time": 240,
    "snow": false, "rain": false,
-   "sky1": "images/sky", "skyandfogcolor1": "600060", "tex1": "images/tex25.png", "color1": "800080", "grid1": "800080", "forcefieldcolor1": "FF0000", "music1": "sounds/theme1.m4a", "decor2": "images/spiderweb1.png",
+   "sky1": "images/sky", "skyandfogcolor1": "600060", "tex1": "images/tex25.png", "color1": "800080", "grid1": "800080", "forcefieldcolor1": "FF0000", "music1": "sounds/theme1.m4a", "decor2": "images/spiderweb1.png", "arcane1": "images/arcane2.png",
    "tutorial": [{"text":["Roll to the golden gate to finish the level.","Докатись до золотых ворот, чтобы пройти уровень.","Roule jusqu'au portail doré pour finir le niveau.","Rolle zum goldenen Tor, um das Level zu beenden.","Seviyeyi bitirmek için altın kapıya yuvarlan."],"coords1":[30.5,32.5],"offy1":0.22},{"text":["Touch a switch and the barrier it powers goes down.","Наедь на переключатель - и барьер, который он держит, опустится.","Touche un interrupteur et la barrière qu'il alimente tombe.","Berühre einen Schalter und die Barriere dahinter senkt sich.","Bir anahtara dokun, beslediği bariyer aşağı iner."],"coords1":[20.5,21.5],"offy1":0.25}],
    "pipeVox": [],
    "pipeCon": [],

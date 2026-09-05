@@ -7,9 +7,9 @@ repeat: none
 cutscene/Layer 8
   rotate: false
   xy: 1, 1716
-  size: 458, 293
+  size: 458, 292
   orig: 461, 293
-  offset: 2, 0
+  offset: 2, -1
   index: -1
 cutscene/Layer 1
   rotate: false

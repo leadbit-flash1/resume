@@ -11,12 +11,12 @@ cutscene/Layer 8
   orig: 461, 293
   offset: 2, 0
   index: -1
-cutscene/Layer 6
+cutscene/Layer 5
   rotate: false
-  xy: 1, 1255
-  size: 497, 479
-  orig: 497, 479
-  offset: 0, 0
+  xy: 1, 927
+  size: 787, 326
+  orig: 793, 446
+  offset: 6, 35
   index: -1
 cutscene/Layer 3
   rotate: false
@@ -39,19 +39,19 @@ cutscene/Layer 2
   orig: 259, 500
   offset: 0, 4
   index: -1
-cutscene/Layer 5
-  rotate: false
-  xy: 1, 927
-  size: 787, 326
-  orig: 793, 446
-  offset: 6, 35
-  index: -1
 cutscene/Layer 1
   rotate: false
   xy: 790, 485
   size: 228, 473
   orig: 242, 499
   offset: 13, 3
+  index: -1
+cutscene/Layer 6
+  rotate: false
+  xy: 1, 1255
+  size: 497, 479
+  orig: 497, 479
+  offset: 0, 0
   index: -1
 cutscene/Layer 7
   rotate: false

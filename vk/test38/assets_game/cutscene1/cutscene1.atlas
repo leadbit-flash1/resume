@@ -6,17 +6,24 @@ filter: Linear,Linear
 repeat: none
 cutscene/Layer 8
   rotate: false
-  xy: 1, 1716
+  xy: 500, 820
   size: 458, 289
   orig: 461, 293
   offset: 2, 2
   index: -1
-cutscene/Layer 4
+cutscene/Layer 5
   rotate: false
   xy: 1, 492
-  size: 631, 413
-  orig: 681, 433
-  offset: 0, 0
+  size: 787, 326
+  orig: 793, 446
+  offset: 6, 35
+  index: -1
+cutscene/Layer 1
+  rotate: false
+  xy: 790, 1
+  size: 228, 473
+  orig: 242, 499
+  offset: 13, 3
   index: -1
 cutscene/Layer 3
   rotate: false
@@ -25,38 +32,17 @@ cutscene/Layer 3
   orig: 649, 497
   offset: 10, 1
   index: -1
-cutscene/Layer 5
-  rotate: false
-  xy: 1, 907
-  size: 787, 326
-  orig: 793, 446
-  offset: 6, 35
-  index: -1
-cutscene/Layer 1
-  rotate: false
-  xy: 790, 485
-  size: 228, 473
-  orig: 242, 499
-  offset: 13, 3
-  index: -1
-cutscene/Layer 6
-  rotate: false
-  xy: 1, 1235
-  size: 497, 479
-  orig: 497, 479
-  offset: 0, 0
-  index: -1
-cutscene/Layer 2
-  rotate: false
-  xy: 613, 1
-  size: 259, 482
-  orig: 259, 500
-  offset: 0, 4
-  index: -1
 cutscene/Layer 7
   rotate: false
-  xy: 461, 1716
+  xy: 500, 1111
   size: 349, 142
   orig: 355, 172
   offset: 0, 12
+  index: -1
+cutscene/Layer 6
+  rotate: false
+  xy: 1, 820
+  size: 497, 479
+  orig: 497, 479
+  offset: 0, 0
   index: -1

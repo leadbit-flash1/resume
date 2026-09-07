@@ -41,14 +41,14 @@ cutscene/Layer 7
   index: -1
 cutscene/Layer 6
   rotate: false
-  xy: 500, 820
+  xy: 1, 820
   size: 497, 479
   orig: 497, 479
   offset: 0, 0
   index: -1
 cutscene/Layer 6a
   rotate: false
-  xy: 1, 820
+  xy: 500, 820
   size: 497, 479
   orig: 497, 479
   offset: 0, 0

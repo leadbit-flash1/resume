@@ -6,7 +6,7 @@ filter: Linear,Linear
 repeat: none
 cutscene/Layer 8
   rotate: false
-  xy: 500, 820
+  xy: 1, 1301
   size: 458, 289
   orig: 461, 293
   offset: 2, 2
@@ -34,7 +34,7 @@ cutscene/Layer 3
   index: -1
 cutscene/Layer 7
   rotate: false
-  xy: 500, 1111
+  xy: 461, 1301
   size: 349, 142
   orig: 355, 172
   offset: 0, 12
@@ -42,6 +42,13 @@ cutscene/Layer 7
 cutscene/Layer 6
   rotate: false
   xy: 1, 820
+  size: 497, 479
+  orig: 497, 479
+  offset: 0, 0
+  index: -1
+cutscene/Layer 6a
+  rotate: false
+  xy: 500, 820
   size: 497, 479
   orig: 497, 479
   offset: 0, 0

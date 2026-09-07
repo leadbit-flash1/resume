@@ -4,6 +4,7 @@
    "w": 40, "h": 40,
    "spawn": [5.5,7.5],
    "time": 240,
+   "balltype": "planet",
    "snow": false, "rain": false,
    "sky1": "images/sky", "skyandfogcolor1": "600060", "tex1": "images/tex25.png", "color1": "800080", "grid1": "800080", "forcefieldcolor1": "FF0000", "music1": "sounds/theme1.m4a", "decor2": "images/spiderweb1.png", "arcane1": "images/arcane2.png",
    "tutorial": [{"text":["A swipe in any direction rolls the ball, the button makes it jump.","Свайп в любую сторону катит шар, кнопка заставляет его прыгнуть.","Un glissement dans une direction fait rouler la bille, le bouton la fait sauter.","Ein Wisch in eine Richtung rollt die Kugel, die Taste lässt sie springen.","Bir yöne kaydırmak topu yuvarlar, düğme zıplatır."],"controls1":1,"offx1":-0.14,"offy1":0.22,"r1":0.17},{"text":["We need to roll to the golden gate to finish the level.","Нужно докатиться до золотых ворот, чтобы пройти уровень.","Il faut rouler jusqu'au portail doré pour finir le niveau.","Man muss zum goldenen Tor rollen, um das Level zu beenden.","Seviyeyi bitirmek için altın kapıya yuvarlanmak gerekir."],"coords1":[30.5,32.5],"offy1":0.22},{"text":["Touching a switch lowers the barrier it powers.","Касание переключателя опускает барьер, который он держит.","Toucher un interrupteur abaisse la barrière qu'il alimente.","Das Berühren eines Schalters senkt die Barriere dahinter.","Bir anahtara dokunmak, beslediği bariyeri indirir."],"coords1":[20.5,21.5],"offy1":0.25}],

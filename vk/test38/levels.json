@@ -3623,18 +3623,17 @@
     {"t":"bat","x":36.5,"y":17.5,"dx":30.5,"dy":17.5,"size":0.55,"speed":1.6},
     {"t":"d2","pos":[29,22,1],"dir":[3,0,0],"h":3,"up":0,"tile":0,"f":0,"dz":0},
     {"t":"diamond","x":23.5,"y":14.5},
-    {"t":"diamond","x":4.5,"y":16.5},
-    {"t":"switch","x":4.5,"y":8.5,"on":false},
-    {"t":"decor","x":36,"y":7,"m":"tree1","rot":0}
+    {"t":"decor","x":36,"y":7,"m":"tree1","rot":0},
+    {"t":"switch","x":4.5,"y":8.5,"on":false}
    ]
   },
   {
    "w": 40, "h": 40,
    "spawn": [5.5,19.5],
-   "time": 240,
+   "time": 210,
    "balltype": "normal",
-   "snow": false, "rain": false,
-   "skyandfogcolor1": "#3fa34d", "tex1": "images/tex24.png", "color1": "#3fa34d", "grid1": "#e8c93a40", "forcefieldcolor1": "#800080",
+   "snow": false, "rain": true,
+   "skyandfogcolor1": "#e08a2e", "tex1": "images/tex22.png", "color1": "#ffffff", "grid1": "#ffffff40", "checker1": 0.7, "forcefieldcolor1": "#e08a2e", "arcanecolor1": "#3fa34d",
    "tutorial": {"text":["A collected diamond becomes the checkpoint.","Собранный алмаз становится точкой сохранения.","Un diamant ramassé devient le point de contrôle.","Ein eingesammelter Diamant wird zum Kontrollpunkt.","Alınan elmas kontrol noktası olur."],"coords1":[20.5,19.5],"offy1":0.25},
    "pipeVox": [],
    "pipeCon": [],
@@ -5414,6 +5413,12 @@
     {"t":"decor","x":36,"y":17,"m":"stone1","rot":0},
     {"t":"decor","x":32,"y":17,"m":"stone1","rot":1},
     {"t":"cactus","x":35,"y":4,"r":0.4},
+    {"t":"sand","pos":[22.5,17.5,1.529],"s":4.5,"yaw":0,"tilt":0,"roll":0,"a":1,"sd":0.561},
+    {"t":"sand","pos":[22.5,31.5,2.529],"s":5.5,"yaw":0,"tilt":0,"roll":0,"a":1,"sd":0.984},
+    {"t":"sand","pos":[5.5,18.5,0.529],"s":4.25,"yaw":0,"tilt":0,"roll":0,"a":1,"sd":0.011},
+    {"t":"sand","pos":[17.5,11.5,1.029],"s":2.25,"yaw":0,"tilt":0,"roll":0,"a":1,"sd":0.868},
+    {"t":"sand","pos":[34.5,5.5,1.529],"s":2.5,"yaw":0,"tilt":0,"roll":0,"a":1,"sd":0.761},
+    {"t":"sand","pos":[33.5,16.5,2.529],"s":3.25,"yaw":0,"tilt":0,"roll":0,"a":1,"sd":0.29},
     {"t":"switch","x":22.5,"y":33.5,"on":false}
    ]
   },
@@ -12224,10 +12229,10 @@
     {"t":"black","x":9.5,"y":14.5},
     {"t":"glass2","x":5,"y":14,"axis":1,"dir":-1,"n":3,"m":6,"z":[0.958,0.875,0.792,0.708,0.625,0.542],"sl":-0.083,"sp":0.6},
     {"t":"fkey","x":6,"y":22,"c":0},
-    {"t":"switch","x":25.5,"y":24.5,"on":false},
     {"t":"tentacle","x":33,"y":23},
     {"t":"tentacle","x":32,"y":24},
     {"t":"flag","x":31,"y":24,"pts":50},
+    {"t":"switch","x":25.5,"y":24.5,"on":false},
     {"t":"trkc","x":10,"y":8,"g":0},
     {"t":"trkc","x":10,"y":7,"g":0},
     {"t":"trkc","x":9,"y":8,"g":0},

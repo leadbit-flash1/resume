@@ -4385,6 +4385,7 @@
    "balltype": "planet",
    "snow": false, "rain": false,
    "sky1": "images/sky", "skyandfogcolor1": "600060", "tex1": "images/tex25.png", "color1": "800080", "grid1": "800080", "forcefieldcolor1": "FF0000", "music1": "sounds/theme1.m4a", "decor2": "images/spiderweb1.png", "arcane1": "images/arcane2.png",
+   "cutscene": "97",
    "tutorial": [{"text":["Touching a switch lowers the barrier it powers.","Касание переключателя опускает барьер, который он держит.","Toucher un interrupteur abaisse la barrière qu'il alimente.","Das Berühren eines Schalters senkt die Barriere dahinter.","Bir anahtara dokunmak, beslediği bariyeri indirir."],"coords1":[20.5,21.5],"offy1":0.25}],
    "way": [[[33,7]],[[30,32]]],
    "pipeVox": [],

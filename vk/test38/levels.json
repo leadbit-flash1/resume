@@ -429,7 +429,7 @@
    "balltype": "normal",
    "snow": false, "rain": false,
    "skyandfogcolor1": "#9aa3b0", "tex1": "images/tex21.png", "color1": "#101418", "grid1": "#2fb5c840", "checker1": 0.4, "forcefieldcolor1": "#800080", "arcanecolor1": "#9aa3b0",
-   "way": [[[24,29],[16,37]]],
+   "way": [[[33,23],[33,24],[26,24],[26,25],[33,25],[33,26],[26,26],[26,27],[33,27],[33,28],[25,28],[24,29],[16,37]]],
    "pipeVox": [],
    "pipeCon": [],
    "pipeRad": {},

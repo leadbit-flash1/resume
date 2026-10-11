@@ -4,6 +4,7 @@
   "models": [
     { "id": "stone1", "name": "stone",  "obj": "models/stone1.obj",  "tex": "models/stone1.jpg" },
     { "id": "tree1", "name": "Tree",  "obj": "models/tree2.obj",  "tex": "models/tree2.jpg" },
-    { "id": "crystal1", "name": "Crystal",  "obj": "models/crystal1.obj",  "tex": "models/crystal1.jpg" }
+    { "id": "crystal1", "name": "Crystal",  "obj": "models/crystal1.obj",  "tex": "models/crystal1.jpg" },
+    { "id": "column1", "name": "Column",  "obj": "models/column1.obj",  "tex": "models/column1.jpg" }
   ]
 }

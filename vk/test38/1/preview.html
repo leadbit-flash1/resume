@@ -586,7 +586,7 @@ function buildDeckMesh(L) {   // floor + ceiling per cell, a wall face on every 
         q4(add(a, up(hc - CH)), add(b, up(hc - CH)), madd(madd(add(b, up(hc)), n, CH), u, CH * eb), madd(madd(add(a, up(hc)), n, CH), u, -CH * ea), norm(sub(n, [0, 1, 0])), mul(wc, .75));
         for (const [sg, e, E] of [[-1, ea, a], [1, eb, b]]) {   // a straight end the strip does not continue past (doorway under a taller lintel): close it
           const ci = i + st[0] * sg, cj = j + st[1] * sg;
-          if (!e && !(ceilAt(ci, cj) === hc && wallY(ci + di, cj + dj, hc))) { const P = add(E, up(hc)), w = mul(u, sg), t = [add(E, up(hc - CH)), P, madd(P, n, CH)];
+          if (!e && !(ceilAt(ci, cj) === hc && wallY(ci + di, cj + dj, hc))) { const E1 = madd(E, u, (c === DOOR ? 1 : -1) * sg * .01), P = add(E1, up(hc)), w = mul(u, sg), t = [add(E1, up(hc - CH)), P, madd(P, n, CH)];   // 1 cm clear of the shut door's face (it lies on that plane): in front of it, so the door shows the 45 deg corners
             for (const V of t) d.push(...V, ...w, ...mul(wc, .6), 0, 0, .25); } } }
       if (nc === SOLID) for (const y of hc > HI + 1.5 ? [1.1, HI + 1.1] : [1.1]) quad(madd([p[0], y, p[2]], n, .01), u, [0, .2, 0], n, [.55, .45, .1]);   // amber stripe
     }
@@ -631,7 +631,7 @@ function drawDeck() {
   for (const d of LV.doors) {   // a shut door glows red; the frame light over each doorway: green open / red locked
     const sx = d.hor ? 1 : 3, sz = d.hor ? 3 : 1, red = d.shut ? [.5, .03, .02] : Z3;
     if (d.open < 1) drawMesh(doorMesh, M.chain(M.T(d.c[0], -d.open * WALL_H, d.c[1]), M.S(sx, WALL_H, sz)), red);
-    drawMesh(cube, M.chain(M.T(d.c[0], WALL_H - .07, d.c[1]), M.S(d.hor ? 1.02 : 3, .12, d.hor ? 3 : 1.02)), d.shut ? [.9, .05, .02] : [.05, .7, .2], 1);
+    drawMesh(cube, M.chain(M.T(d.c[0], WALL_H - .07, d.c[1]), M.S(d.hor ? 1.02 : 1.8, .12, d.hor ? 1.8 : 1.02)), d.shut ? [.9, .05, .02] : [.05, .7, .2], 1);   // light bar: fits between the 45 deg corners
   }
   for (const c of LV.crates) if (!c.dead) drawMesh(crateMesh, M.T(c.i + .5, 0, c.j + .5), mul([1, .7, .4], c.flash * .5));
   for (const l of LV.lamps) if (l.bad) {   // faulty (or shot) lamps; shot ones are in the baked mesh, so "off" is a dark cover
@@ -776,16 +776,17 @@ function rayBox(o, d, b) {
 const y0 = t => t.pos[1] + (t.T.y0 || 0);   // flyers hover: their box hangs around pos[1]
 const boxOf = t => t.box || (t.T ? {min: [t.pos[0] - t.T.r, y0(t), t.pos[2] - t.T.r], max: [t.pos[0] + t.T.r, y0(t) + t.T.h, t.pos[2] + t.T.r]} : tBox(t));
 const centerOf = t => t.c || (t.T ? [t.pos[0], y0(t) + t.T.h * .6, t.pos[2]] : tCenter(t));
-const hittables = () => TARGETS.concat(mons, LV.crates, LV.lamps);   // dummies + live monsters + crates + lamps
+const hittables = () => TARGETS.concat(mons, LV.crates, LV.lamps, corpses.filter(c => !c.pit && c.t > .4 && c.t < 8));   // dummies + live monsters + crates + lamps + lying corpses
 function raycast(o, d, maxT = 200, skip = null) {  // -> {t, target}
   let best = {t: rayWorld(o, d, maxT), target: null};
   for (const tg of hittables()) {
     if (tg.dead || (skip && skip.has(tg))) continue;
-    const t = rayBox(o, d, boxOf(tg)); if (t !== null && t < best.t) best = {t, target: tg};
+    const t = tg.lb ? rayBox(M.pt(tg.iw, o), M.dir(tg.iw, d), tg.lb) : rayBox(o, d, boxOf(tg));   // corpses: a box turned with the body
+    if (t !== null && t < best.t) best = {t, target: tg};
   }
   return best;
 }
-const nearest = (from, n, reach, not) => hittables().filter(t => !t.dead && !t.crate && !t.lamp && t !== not && len(sub(centerOf(t), from)) < reach)
+const nearest = (from, n, reach, not) => hittables().filter(t => !t.dead && !t.crate && !t.lamp && !t.corpse && t !== not && len(sub(centerOf(t), from)) < reach)
   .sort((a, b) => len(sub(centerOf(a), from)) - len(sub(centerOf(b), from))).slice(0, n);
 
 /* ============================================================ 5. weapon profiles (from the Crimsonland listing)
@@ -1066,10 +1067,17 @@ function hitTarget(t, dmg, impulse = 1, dir = null, point = null, blood = 1) {
   t.flash = 1;
   if (t.lamp) { hitLamp(t); return; }
   if (t.crate) { t.hp -= dmg; if (t.hp <= 0) breakCrate(t); return; }
+  if (t.corpse) {   // shooting a corpse: more blood each hit, then it bursts into parts
+    bleed(point || t.c, dir ? mul(dir, -.4) : [0, 1, 0], clamp(dmg / 14, .4, 2));
+    if ((t.hp -= dmg) <= 0) { t.dead = 1; corpses = corpses.filter(c => c !== t); const big = t.m.T.r * 2;
+      bleed(t.c, [0, 1, 0], 3 * big); addDecal(t.c[0], t.c[2], t.m.T.r * rand(5, 7), null, t.m.gy); gibBurst(t.c, dir || [0, 0, 0], big, 10 + big * 6); }
+    return;
+  }
   if (!t.T) { t.dmg += dmg; t.hits++; t.wobV += impulse * rand(.8, 1.3); return; }
   STATS.dmg += Math.max(0, dmg); STATS.hits++;
   const flat = dir ? norm([dir[0], 0, dir[2]]) : norm(sub(t.pos, [EYE[0], 0, EYE[2]]));
   t.hp -= dmg; t.kb = madd(t.kb, flat, impulse * 1.4 / (t.T.r * 2));
+  if (t.T.anim && !t.fl && !t.intro && dmg > 3) t.fl = {c: 'Get_Hit_' + (1 + Math.floor(Math.random() * 4)), t0: clock};   // crawler: a flinch over whatever it is doing
   if (blood) bleed(point || centerOf(t), dir || flat, clamp(dmg / 14, .4, 3) * blood);
   if (t.hp <= 0) killMon(t, dir || flat);
 }
@@ -1187,7 +1195,7 @@ function impact(pr, p, target) {
 }
 function flameDamage(p) {
   for (const t of hittables()) {
-    if (t.dead || t.lamp) continue;
+    if (t.dead || t.lamp || t.corpse) continue;   // flames roll over corpses
     const b = boxOf(t), q = p.pos.map((v, i) => clamp(v, b.min[i], b.max[i]));
     if (len(sub(q, p.pos)) < mix(p.w0, p.w1, p.age / p.life) * .35) {
       hitTarget(t, p.dmg, .05, p.vel, q, 0); p.done = 1;   // a kill clears burn: never re-light a corpse, it would glow forever
@@ -1240,19 +1248,21 @@ const MT = (() => {
   // free slots for future monsters: box placeholders with real stats, weight 0 (set w / minD to put one in the mix)
   const dummy = (name, col, h, r) => ({name, hp: 80, speed: 1.8, r, h, dps: 10, step: 6, w: 0, minD: 0, parts: [
     part([[[0, h / 2, 0], [r * 1.6, h, r * 1.6], col], [[0, h * .82, r * .8], [r, h * .1, .04], [1, .9, .3], E]], [0, 0, 0], 'bob')]});
-  return [zombie, spider, lizard, brute, bat, dummy('dummyA', [.5, .5, .55], 1.6, .4), dummy('dummyB', [.35, .5, .6], 1.1, .5), dummy('dummyC', [.6, .45, .3], 2.2, .55)];
+  const crawler = {...dummy('crawler', [.7, .72, .76], 1, .5), hp: 70, speed: 2.8, dps: 11, w: 2.5, minD: 1, anim: 'crawler',   // the zombie rig on all fours (7d)
+    rate: m => 6.2832 * Math.max(.05, (m.vf || 0) * m.T.speed) / mix(1.05, 2.1, ease(Math.min(1.3, m.vf || 0), .5, .95)) / m.T.scale};   // stride of the walk / gallop clip
+  return [zombie, spider, lizard, brute, bat, crawler, dummy('dummyB', [.35, .5, .6], 1.1, .5), dummy('dummyC', [.6, .45, .3], 2.2, .55)];
 })();
 const gibMesh = (() => { const d = []; pushBox(d, [0, 0, 0], [1, 1, 1], [.36, .03, .03], [0, 0, .8]); return meshVAO(d); })();
 const woodMesh = (() => { const d = []; pushBox(d, [0, 0, 0], [1, 1, 1], [.4, .3, .17]); return meshVAO(d); })();
 let mons = [], corpses = [], gibs = [], decals = [], drops = [], clock = 0;
 const SHOVE = {spider: .35, bat: .35};   // share of the push a monster takes when you walk into it (the rest moves you; brutes never budge)
-const HIT_T = {zombie: .9, spider: .55, lizard: .8, brute: 1.2, bat: .7};   // seconds between blows (damage per blow = dps x this)
+const HIT_T = {zombie: .9, spider: .55, lizard: .8, brute: 1.2, bat: .7, crawler: 1.1};   // seconds between blows (damage per blow = dps x this)
 const OWN = new Set();   // weapons picked up (kept across decks and deaths); the run starts with the pistol
 const KEEP_LEVEL_ON_DEATH = true;   // true: dying keeps your level / XP; false: they go back to what you had when the deck started
 const TEST_ALL_WEAPONS = true;   // testing: own every weapon from the start (Q/E, 1-9, list). false = pistol, then only what you pick up
 // --- Crimsonland survival levelling: pass level L when XP > 1000 + floor(L^1.8 * 1000) (2000, 4482, 8225, 13125...)
 const lvlNeed = L => 1000 + Math.floor(Math.pow(L, 1.8) * 1000);
-const XP_KILL = {zombie: 120, spider: 90, lizard: 150, bat: 70, brute: 600};   // ~ Crimsonland's size * 2 + 50; brute as a mini-boss
+const XP_KILL = {zombie: 120, spider: 90, lizard: 150, bat: 70, brute: 600, crawler: 140};   // ~ Crimsonland's size * 2 + 50; brute as a mini-boss
 // weapon tiers = Crimsonland's weapon order. A drop at level L comes from the 4 tiers ending at L (80%), at L+2 (12%), L+4 (6%), L+8 (2%);
 // levels 1-4 roll tiers 1-4
 const TIER = ['pistol', 'assault_rifle', 'shotgun', 'sawed_off_shotgun', 'submachine_gun', 'gauss_gun', 'mean_minigun', 'flamethrower',
@@ -1287,6 +1297,10 @@ function spawnMon(r, T) {   // on a free floor cell of the room, > 6 m from the 
   const pool = far.length ? far : c, [x, z, gy] = pool[Math.floor(Math.random() * pool.length)];
   mons.push({T, pos: [x, gy + (T.fly || 0), z], yaw: 0, hp: T.hp * (1 + r.depth * .15), phase: rand(0, 6),
     kb: [0, 0, 0], flash: 0, burn: 0, atk: 0, atkT: 0, cd: .35, gy, off: rand(-1, 1), speed: T.speed * rand(.85, 1.15)});
+  const m = mons[mons.length - 1]; m.cs = Math.floor(Math.random() * 3);
+  if (T.anim && CRAWL && T.rig) { const c = Math.random() < .5 ? 'Out_Of_Ground' : 'Jump_From_The_Ceiling';   // crawls out of the floor or drops from the ceiling
+    const k = Math.floor(z) * GW + Math.floor(x), top = !gy && LV.lay[k] & 2 ? HI - .25 : ceilAt(Math.floor(x), Math.floor(z));   // under a deck: its slab
+    m.intro = {c, t0: clock, dy: c === 'Out_Of_Ground' ? 0 : clamp(top - gy - 2.75, 0, 1.5)}; return; }
   spawn({pos: [x, gy + .15, z], life: .6, kind: 5, w0: .3, w1: 2.4, tint: [.8, .25, 1]});
   spawn({pos: [x, gy + 1, z], life: .4, kind: 0, w0: 2.4, tint: [.7, .2, 1]});
 }
@@ -1385,13 +1399,28 @@ function killMon(m, d) {
     drops.push({base, pos: pit ? [EYE[0], PL.gy, EYE[2]] : [m.pos[0], m.gy, m.pos[2]], t: rand(0, 6)});
   if (!drops.some(x => x.med) && Math.random() < BONUS_P * MEDIKIT_P)   // a MediKit (only one lies around at a time, as in Crimsonland)
     drops.push({med: 1, pos: pit ? [EYE[0], PL.gy, EYE[2]] : [m.pos[0] + .4, m.gy, m.pos[2]], t: rand(0, 6)});
-  corpses.push({m, t: 0, burn: burning ? 3 : 0, pit}); if (corpses.length > 45) corpses.shift();
+  const lb = corpseBox(m), w = M.mul(M.T(m.pos[0], m.gy, m.pos[2]), M.R(1, m.yaw));   // shootable: a box round the body as it will lie
+  corpses.push({m, t: 0, burn: burning ? 3 : 0, pit, corpse: 1, hp: m.T.hp * .5, lb, iw: M.mul(M.R(1, -m.yaw), M.T(-m.pos[0], -m.gy, -m.pos[2])),
+    c: M.pt(w, [0, 1, 2].map(i => (lb.min[i] + lb.max[i]) / 2))}); if (corpses.length > 45) corpses.shift();
   if (pit) return;   // it fell: no gore up here
   const c = centerOf(m), big = m.T.r * 2;
   bleed(c, d, 2.5 * big); bleed(add(c, [0, .3, 0]), mul(d, -.3), 1.5 * big);
   addDecal(m.pos[0], m.pos[2], m.T.r * rand(4.5, 6.5), null, m.gy);                       // the pool it dies in
   addDecal(m.pos[0] + d[0] * m.T.r * 2, m.pos[2] + d[2] * m.T.r * 2, m.T.r * rand(3, 4.5), null, m.gy);   // ...and the spray behind it
-  for (let i = 0; i < 4 + big * 3; i++) gibs.push({pos: add(c, [rand(-.2, .2), rand(-.2, .2), rand(-.2, .2)]),
+  gibBurst(c, d, big, 4 + big * 3);
+}
+function corpseBox(m) {   // the final death pose, in the body's own frame (feet at y 0): skeleton bounds, or the box monster fallen back
+  const T = m.T, R = T.rig; let lo, hi;
+  if (R) {
+    const {pts, fall, lie} = rigPose(m, R, 1); let mm = M.S(T.scale, T.scale, T.scale);   // same grounding as drawRig
+    if (fall) { mm = M.mul(mm, fall); const y = Math.min(...pts.map(p => M.pt(mm, p)[1])); mm = M.mul(M.T(0, (lie ?? T.r * .3) - y, 0), mm); }
+    const W = pts.map(p => M.pt(mm, p)); lo = [0, 1, 2].map(i => Math.min(...W.map(p => p[i]))); hi = [0, 1, 2].map(i => Math.max(...W.map(p => p[i])));
+  } else { lo = [-T.r, 0, -T.h]; hi = [T.r, T.r * 1.2, T.r]; }
+  lo = lo.map(v => v - .1); hi = hi.map(v => v + .1); lo[1] = 0; hi[1] = Math.max(hi[1], .35);   // padded, never thinner than 35 cm
+  return {min: lo, max: hi};
+}
+function gibBurst(c, d, big, n) {   // flesh chunks flying from c along d
+  for (let i = 0; i < n; i++) gibs.push({pos: add(c, [rand(-.2, .2), rand(-.2, .2), rand(-.2, .2)]),
     vel: add(mul(d, rand(1, 4)), [rand(-2.5, 2.5), rand(2, 5), rand(-2.5, 2.5)]), rot: [rand(0, 6), rand(0, 6)], spin: rand(-12, 12), s: rand(.06, .16) * (.6 + big * .5), life: 7, age: 0});
 }
 function hurtPlayer(d) {   // one blow: red flash + a jolt of the view
@@ -1436,6 +1465,9 @@ function updateHorde(dt) {
   }
   for (const m of mons) {
     m.flash = Math.max(0, m.flash - dt * 6);
+    if (m.intro) { if (clock - m.intro.t0 < CRAWL.clips[m.intro.c].len) { m.vf = 0; continue; } m.intro = null; }   // entrance: no moving or striking yet
+    if (m.T.anim && CRAWL && !m.seen && (m.seen = m.inR || sight(m.pos, me, m.T.r, false, m.gy, PL.gy)) && !m.inR) m.shout = clock;   // first sight: a roar (not if already on you)
+    if (m.shout && clock - m.shout < CRAWL.clips.Shout.len / 1.3 - .3) { m.vf = 0; m.yaw += wrapA(Math.atan2(EYE[0] - m.pos[0], EYE[2] - m.pos[2]) - m.yaw) * (1 - Math.exp(-6 * dt)); continue; }
     const fly = !!m.T.fly, to = sub(me, m.pos), dist = Math.hypot(to[0], to[2]); to[1] = 0;
     // reach with hysteresis: it stops ~0.8 m out (claws short of your face) and keeps striking until you are 0.35 m further;
     // without the gap it toggled walk / attack every frame at the edge (the flicker)
@@ -1471,7 +1503,7 @@ function updateHorde(dt) {
     m.pos = [p[0], m.gy + (fly ? mix(m.T.fly, 1.25, m.atk) + .12 * Math.sin(m.phase * .2) : 0), p[2]];
     if (!fly && cellAt(Math.floor(p[0]), Math.floor(p[2])) === PIT) { killMon(m, Z3); continue; }
     m.vf = mix(m.vf || 0, len(v) / m.T.speed, 1 - Math.exp(-6 * dt));   // smoothed speed fraction: gait rate (and the lizard's walk/run blend)
-    m.phase += dt * m.T.step * (fly ? 1 : Math.min(1.3, m.vf + .15));
+    m.phase += dt * (m.T.rate && CRAWL ? m.T.rate(m) : m.T.step * (fly ? 1 : Math.min(1.3, m.vf + .15)));
     if (m.burn > 0) {
       m.burn -= dt; m.hp -= m.burnDps * dt; STATS.dmg += m.burnDps * dt;
       if (Math.random() < dt * 25) spawn({pos: add(m.pos, [rand(-m.T.r, m.T.r), rand(.2, m.T.h), rand(-m.T.r, m.T.r)]), vel: [0, 1.5, 0], life: rand(.4, .7), kind: 1, w0: .25, w1: .7, fire: 1, er0: .08, er1: 1.2});
@@ -1532,7 +1564,7 @@ function drawDecals() {   // wet red -> dried brown over ~25 s; they stay (oldes
    Rest skeleton from the file (extras.skel). Per frame: FK spine / neck / tail, gamebody Tentacle FABRIK for every limb,
    per-type walk / attack / death on top. The troll file plays the zombie and the brute (x1.4, purple). Box monsters until dropped. */
 const SKIN = {   // file -> [MT index, scale, tint, hit radius, hit height, gait rate]
-  troll: [[0, 1, [1, 1, 1], .42, 1.75, 5.5], [3, 1.4, [.95, .55, 1.15], .6, 2.45, 4]],
+  troll: [[0, 1, [1, 1, 1], .42, 1.75, 5.5], [3, 1.4, [.95, .55, 1.15], .6, 2.45, 4], [5, 1, [1.1, 1.08, 1.3], .5, 1, 6]],   // zombie, brute, crawler (pale)
   spider: [[1, 1, [1, 1, 1], .45, .62, 16]], lizard: [[2, 1.5, [1, 1, 1], .63, .93, 9]], bat: [[4, 1.3, [1, 1, 1], .45, .5, 18]]};
 const IKN = {troll: {leg: [2, 1], arm: [2, 0]}, spider: {leg: [3, 0]}, lizard: {leg: [2, 1]}};   // limb: [IK bones, flat foot]
 const RIG = {};
@@ -1645,10 +1677,58 @@ const ANIM = {   // fill o.off / o.root / o.L (local bone rotations) / o.tg (lim
     if (d) { o.fall = M.R(2, Math.PI * d); o.lie = .03; }
   },
 };
+/* ============================================================ 7d. the crawler: the zombie rig driven by the UE creature pack
+   Crimsonland/crawler_anims.json (exported once from the pack by ue_anim_export.py): 14 joints per frame, 30 fps, cm, our axes.
+   Retarget: hip offset, spine / neck / head directions (from-to rotations), four IK targets. The zombie's arms are about twice the
+   creature's, so the front end rides CRAWL_ARM x higher and the hands knuckle-walk (held upright). Clips: walk <-> gallop by speed,
+   one attack clip per blow, a flinch layered on each hit, a roar on first sight, a random death, and an entrance (floor or ceiling). */
+let CRAWL = null;
+const CRAWL_ARM = 1.45;   // front-end height vs the creature's own crawl (1 = as low as the pack, arms bent hard)
+function crawlPose(name, t, loop) {   // -> {joint: [x, y, z] m}, linear between frames
+  const C = CRAWL.clips[name], n = C.n, w = CRAWL.pts.length * 3, f = loop ? ((t * 30) % (n - 1) + n - 1) % (n - 1) : clamp(t * 30, 0, n - 1);
+  const i = Math.floor(f), j = Math.min(n - 1, i + 1), k = f - i, P = {};
+  CRAWL.pts.forEach((p, q) => { const a = i * w + q * 3, b = j * w + q * 3; P[p] = [0, 1, 2].map(x => mix(C.d[a + x], C.d[b + x], k) / 100); });
+  return P;
+}
+const mixPose = (A, B, k) => { if (k <= 0) return A; const P = {}; for (const p in A) P[p] = lerp3(A[p], B[p], k); return P; };
+const mT = m => { const o = M.id(); for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) o[i * 4 + j] = m[j * 4 + i]; return o; };   // rotation inverse
+ANIM.crawler = (m, o, d) => {
+  const C = CRAWL.clips, by = m.T.rig.by;
+  let P;
+  if (d > 0) { m.dc = m.dc || 'Dead_' + (1 + Math.floor(Math.random() * 4)); P = crawlPose(m.dc, d * C[m.dc].len); }
+  else if (m.intro) { const t = clock - m.intro.t0; P = crawlPose(m.intro.c, t);
+    if (m.intro.dy) for (const p in P) P[p] = add(P[p], [0, m.intro.dy * clamp((P.pelvis[1] - .42) / 1.85, 0, 1), 0]); }   // the pack's ceiling is 2.7 m: hang from ours
+  else {
+    const u = m.phase / 6.2832, run = ease(Math.min(1.3, m.vf || 0), .5, .95);
+    P = mixPose(crawlPose('Walk', u * C.Walk.len, 1), crawlPose('Sit_Run_02', u * C.Sit_Run_02.len, 1), run);
+    if (m.shout) { const t = (clock - m.shout) * 1.3; P = mixPose(P, crawlPose('Shout', t), bump(t, 0, .25, C.Shout.len - .35, C.Shout.len)); }
+    if (m.atk > 0) { if (m.aB === undefined) m.aB = m.atkT;   // one clip per blow, the strike lands ~.35 s in like the damage
+      const HT = HIT_T.crawler, lt = m.atkT - m.aB + HT * .45 - .35, cl = ['Attack_1', 'Attack_4', 'Attack_6'][(Math.floor(lt / HT) + m.cs) % 3];
+      P = mixPose(P, crawlPose(cl, ((lt % HT) + HT) % HT / HT * C[cl].len), m.atk); } else m.aB = undefined;
+    if (m.fl) { const t = (clock - m.fl.t0) * 1.6, L = C[m.fl.c].len; if (t < L) P = mixPose(P, crawlPose(m.fl.c, t), .85 * bump(t, 0, .1, L - .3, L)); else m.fl = null; }
+  }
+  const rd = n => norm(sub(by[n].t, by[n].h)), W = {}, H0 = P.pelvis, Kv = mix(1, CRAWL_ARM, clamp(1.5 - H0[1], 0, 1));   // up in the air: no lift
+  W.spine0 = M.ft(rd('spine0'), norm(sub(P.spine_02, P.pelvis))); W.spine1 = M.ft(rd('spine1'), norm(sub(P.spine_03, P.spine_02)));
+  W.spine2 = M.ft(rd('spine2'), norm(sub(P.neck_01, P.spine_03)));
+  const fk = () => { const h1 = add(H0, M.dir(W.spine0, sub(by.spine1.h, by.spine0.h))), h2 = add(h1, M.dir(W.spine1, sub(by.spine2.h, by.spine1.h)));
+    return {h2, sh: c => add(h2, M.dir(W.spine2, sub(by[c + '0'].h, by.spine2.h))), hip: c => add(H0, M.dir(W.spine0, sub(by[c + '0'].h, by.spine0.h)))}; };
+  let F = fk(); const S = mul(add(F.sh('arm.L'), F.sh('arm.R')), .5), v = sub(S, H0), lz = Math.hypot(v[1], v[2]) || 1;
+  const want = (P.upperarm_l[1] + P.upperarm_r[1]) / 2 * Kv, Ra = M.R(0, -(Math.asin(clamp((want - H0[1]) / lz, -1, 1)) - Math.atan2(v[1], v[2])));
+  for (const n of ['spine0', 'spine1', 'spine2']) W[n] = M.mul(Ra, W[n]);   // pitch the torso up round the hips until the shoulders sit there
+  W.neck0 = M.ft(rd('neck0'), norm(sub(P.head, P.neck_01))); W.neck1 = M.ft(rd('neck1'), norm(sub(P.headF, P.head)));   // the head keeps the pack's aim
+  o.root = M.id(); o.off = sub(H0, by.spine0.h); o.L.spine0 = W.spine0;
+  o.L.spine1 = M.mul(mT(W.spine0), W.spine1); o.L.spine2 = M.mul(mT(W.spine1), W.spine2); o.L.neck0 = M.mul(mT(W.spine2), W.neck0); o.L.neck1 = M.mul(mT(W.neck0), W.neck1);
+  F = fk(); o.flat = {'arm.L': 1, 'arm.R': 1, 'leg.L': 1, 'leg.R': 1};
+  for (const c of o.ch) { const s = c.s > 0 ? 'l' : 'r';
+    if (c.kind === 'leg') { const h = F.hip(c.name), a = P['foot_' + s], t = P['thigh_' + s]; o.tg[c.name] = [h[0] + a[0] - t[0], a[1] * 1.1, h[2] + a[2] - t[2]]; }
+    else { const h = F.sh(c.name), a = P['tip_' + s], t = P['upperarm_' + s], hand = sub(by[c.name + '2'].t, by[c.name + '2'].h);
+      o.tg[c.name] = sub([h[0] + (a[0] - t[0]) * .8, a[1] * Kv, h[2] + (a[2] - t[2]) * Kv], hand); }   // knuckles where the creature's fingertips are
+  }
+};
 function rigPose(m, R, d) {   // FK + FABRIK -> skin matrices in R.buf, returns bone end points (model space) + death roll
   const o = {off: [0, 0, 0], root: M.id(), L: {}, tg: {}, w: {}, ch: R.ch, fall: null};
   if (!m.tgLast) m.tgLast = {};
-  ANIM[R.kind](m, o, d);
+  ANIM[m.T.anim && CRAWL ? m.T.anim : R.kind](m, o, d);
   if (!d) m.tgLast = o.tg;
   const Q = {}, H = {}, pts = [];
   for (const b of R.bones) {
@@ -1667,7 +1747,7 @@ function rigPose(m, R, d) {   // FK + FABRIK -> skin matrices in R.buf, returns 
     let P = B[0].p ? Q[B[0].p] : o.root;
     B.forEach((b, i) => {
       if (i < n) { Q[b.n] = M.mul(M.ft(norm(M.dir(P, sub(b.t, b.h))), norm(sub(J[i + 1], J[i]))), P); H[b.n] = J[i]; }
-      else { Q[b.n] = c.flat ? o.root : P; H[b.n] = i === n ? J[n] : add(H[B[i - 1].n], M.dir(Q[B[i - 1].n], sub(b.h, B[i - 1].h))); }
+      else { Q[b.n] = (o.flat ? o.flat[c.name] : c.flat) ? o.root : P; H[b.n] = i === n ? J[n] : add(H[B[i - 1].n], M.dir(Q[B[i - 1].n], sub(b.h, B[i - 1].h))); }
       P = Q[b.n];
     });
   }
@@ -1679,9 +1759,11 @@ function rigPose(m, R, d) {   // FK + FABRIK -> skin matrices in R.buf, returns 
   return {pts, fall: o.fall, lie: o.lie};
 }
 function drawRig(m, base, ct, glow) {   // ct: seconds dead (-1 alive). A corpse lies in its death pose, then sinks after 8 s
-  const T = m.T, R = T.rig, {pts, fall, lie} = rigPose(m, R, ct < 0 ? 0 : ease(ct, 0, R.kind === 'troll' ? .9 : .6));   // the troll's fall takes a little longer
+  const T = m.T, R = T.rig, dl = m.dc && CRAWL ? CRAWL.clips[m.dc].len : 0;   // a crawler plays its death clip at its own length
+  const {pts, fall, lie} = rigPose(m, R, ct < 0 ? 0 : dl ? clamp(ct / dl, 0, 1) : ease(ct, 0, R.kind === 'troll' ? .9 : .6));   // the troll's fall takes a little longer
   let mm = M.mul(base, M.S(T.scale, T.scale, T.scale));
   if (fall) { mm = M.mul(mm, fall); const lo = Math.min(...pts.map(p => M.pt(mm, p)[1])); mm = M.mul(M.T(0, (lie ?? T.r * .3) + base[13] - lo - Math.max(0, ct - 8) * .5, 0), mm); }   // lies on its own floor
+  else if (ct > 8) mm = M.mul(M.T(0, -(ct - 8) * .5, 0), mm);   // clip-driven deaths (crawler) lie as the clip left them: sink the same way
   gl.uniform1i(MESH.u.uSkin, 1); gl.uniform1i(MESH.u.uTexOn, 1); gl.uniform1i(MESH.u.uTex, R.unit); gl.uniform1i(MESH.u.uNrmOn, R.nrm ? 1 : 0); gl.uniform1i(MESH.u.uNrm, R.unit + 3); gl.uniformMatrix4fv(MESH.u['uB[0]'], false, R.buf);
   gl.vertexAttrib3fv(2, T.tint); gl.vertexAttrib3f(3, 0, 0, .3);
   drawMesh(R, mm, glow);
@@ -2020,6 +2102,7 @@ async function autoLoad() {
     .then(b => { LOAD.n++; return b && new File([b], n); })));
   LOAD.miss = files.filter(f => !f).length;
   await loadFiles(files.filter(Boolean));
+  CRAWL = await fetch('Crimsonland/crawler_anims.json').then(r => r.ok ? r.json() : null, () => null);   // the crawler's clips (7d)
   if (TEST_ALL_WEAPONS) Object.keys(weapons).forEach(k => OWN.add(k));
   const first = weapons.pistol42 ? 'pistol42' : Object.keys(weapons)[0]; if (first) select(first);   // the run starts with the pistol in hand
   if (LOAD.miss) $('note').textContent = LOAD.miss + ' files missing from Crimsonland/ - serve this folder over http, or drop files here';

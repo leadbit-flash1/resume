@@ -17,9 +17,115 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #0b0c10; col
 <canvas id="c"></canvas>
 <canvas id="map" width="320" height="320"></canvas>
 <div id="ui">Weapon: <select id="list"></select> &nbsp; Seed: <input id="seed" size="12"> <button id="go">New deck</button> <button id="reset">Restart</button> <span id="note"></span><br>
-Click = capture mouse | WASD move | LMB/F fire | Space jump | C crouch | R reload | Q/E wheel 1-9 weapon | M map | Esc release</div>
+Click = capture mouse | WASD move | LMB/F fire | Space jump | C crouch | R reload | Q/E wheel 1-9 weapon | M map | N music | Esc release</div>
+<script src="sound2.js"></script>
+<script>   /* focus / visibility: sound fades out when the game is hidden or unfocused, back in on return (no 'use strict' here: it sets globals) */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+var pauseScreenState = 0;
+let MVOL=0.6//MUSIC VOLUME CONSTANT
+let TW1=0.15*0.75
+let TW2=0.035*0.75//0.03
+let PURCHASES = 1
+function IPAD() {if (SH > SW)return (SW / SH) > 0.69;return (SH / SW) > 0.69;}
+//QQ43/////SOFT VOLUME FOR SHOP/////////////////////////////////////////////
+let globalVolume1 = 1;
+let globalVolume1tmp = 1;
+
+if (typeof playSound != 'undefined') setInterval(() => {
+    const step = 0.2;
+
+    if (globalVolume1tmp < globalVolume1) {
+        // Increment towards target, but don't overshoot
+        globalVolume1tmp = Math.min(globalVolume1tmp + step, globalVolume1);
+    } else if (globalVolume1tmp > globalVolume1) {
+        // Decrement towards target, but don't undershoot
+        globalVolume1tmp = Math.max(globalVolume1tmp - step, globalVolume1);
+    }
+
+    if (globalVolume != globalVolume1tmp) {
+        globalVolume = globalVolume1tmp;
+    }
+}, 1000 / 30);
+//QQ43/////SOFT VOLUME FOR SHOP/////////////////////////////////////////////
+
+//if(window.FRVR==null)
+{
+	onfocus=function()
+	{
+		if(typeof playSound != 'undefined')globalVolume1=1;
+		pauseScreenState = 0;
+		buttonBlock=10;
+	}
+
+	onblur=function()
+	{
+		if(typeof playSound != 'undefined')globalVolume1=0;
+		pauseScreenState = 1;
+	}
+
+
+	document.addEventListener('visibilitychange', function() {
+		if (document.visibilityState === 'visible')
+		{
+			if (typeof playSound != 'undefined') globalVolume1 = 1;
+			pauseScreenState = 0;
+			buttonBlock = 10;
+		}
+		else
+		if (document.visibilityState === 'hidden')
+		{
+			if (typeof playSound != 'undefined') globalVolume1 = 0;
+			pauseScreenState = 1;
+		}
+	});
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+window.pauseOn=function(text1)
+	{
+		if(typeof playSound != 'undefined')globalVolume1=0;
+		pauseScreenState = 1;
+	}
+window.pauseOff=function(e)
+	{
+		if(typeof playSound != 'undefined')globalVolume1=1;
+		pauseScreenState = 0;
+		buttonBlock=10;
+	}
+/* iOS 18 RESUME FIX (iPhone 12; iOS 15.7 / iPhone 6 never needed it).
+   After a screen LOCK neither `focus` nor `visibilitychange:visible` is
+   reliably delivered, so the two handlers above never ran: pauseScreenState
+   stayed 1 (frozen tick, PAUSE forever) and globalVolume1 stayed 0 (silence).
+   The lines below are EXTRA EXITS ONLY — they add no new pause path, they
+   just reuse pauseOff(), so everything above keeps working unchanged. */
+addEventListener("pageshow", function(){ pauseOff(); });          /* bfcache restore */
+["pointerdown","touchstart","mousedown","keydown"].forEach(function(t1){
+	addEventListener(t1, function(){                               /* last resort: the tap itself */
+		if(pauseScreenState==1 && document.visibilityState!=="hidden") pauseOff();
+	}, true);                                                      /* CAPTURE: before multitouch2/gamebody */
+});
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+</script>
 <script>
 'use strict';
+/* ============================================================ 0. sound (sound2.js: playSound / setMusic; sounds/ from the Bloodworks
+   sources). Without sound2.js the game stays silent. The game only calls the helpers below. */
+if (!window.playSound) { window.playSound = () => ({stop() {}}); window.setMusic = () => {}; }
+const anyOf = a => a[Math.floor(Math.random() * a.length)];
+const sndAt = (s, v, p) => playSound(s, v / (1 + Math.max(0, Math.hypot(p[0] - EYE[0], p[2] - EYE[2]) - 3) * .12));   // fades with distance
+const WSND = {   // per weapon: [shot sound, volume]; LOOP weapons hold one looping sound while firing: [loop, vol, spin-up, spin-down]
+  pistol: ['snd_pistol', .7], assault_rifle: ['snd_assault', .8], submachine_gun: ['snd_uzi', .6], shotgun: ['snd_shotgun', .85],
+  sawed_off_shotgun: ['snd_shotgun', .95], jackhammer: ['snd_shotgun', .7], gauss_gun: ['snd_rail', .75], gauss_shotgun: ['snd_rail', .9],
+  plasma_rifle: ['snd_plasma', .6], plasma_minigun: ['snd_plasma', .4], multi_plasma: ['snd_plasma', .7], plasma_shotgun: ['snd_plasma', .75],
+  plasma_cannon: ['snd_plasma', 1], rocket_launcher: ['snd_rocket', .9], seeker_rockets: ['snd_rocket', .8], mini_rocket_swarmers: ['snd_rocket', .9],
+  rocket_minigun: ['snd_rocket', .55], pulse_gun: ['snd_pulse', .3], ion_rifle: ['snd_laser_pistol', .85], ion_minigun: ['snd_laser_mg', 1.8],
+  ion_shotgun: ['snd_laser', .5], ion_cannon: ['snd_ion_cannon', .8], splitter_gun: ['snd_split', .8]};
+const LOOP = {mean_minigun: ['snd_minigun', .5, 'snd_minigun_start', 'snd_minigun_end'], flamethrower: ['snd_flame', .55], blow_torch: ['snd_flame', .4]};
+const SND = n => window[n];   // sound object by name (sound2.js preloads them as window.snd_*)
+function gunLoop(on) {   // continuous weapons: start the loop when the trigger goes down, stop it (+ spin-down) when it comes up
+  const L = on && W && LOOP[W.slug];
+  if (L && !G.loop) { G.loop = playSound(SND(L[0]), L[1], false, true); G.loopL = L; if (L[2]) playSound(SND(L[2]), .5); }
+  else if (!L && G.loop) { G.loop.stop(); G.loop = null; if (G.loopL[3]) playSound(SND(G.loopL[3]), .4); }
+}
 /* ============================================================ 0. utils / math */
 const $ = id => document.getElementById(id);
 const cv = $('c'), gl = cv.getContext('webgl2', {antialias: true});
@@ -512,7 +618,17 @@ function generate(seed) {
     lamps.push({...L0, p: [x + .5, H2 - .03, z + .5], lay: 1, bad: bad()});          // high ceiling: lights the deck (and the floor where open)
   }
   for (const l of lamps) { const [x, y, z] = l.p; Object.assign(l, {lamp: 1, c: l.p, box: {min: [x - .7, y - .06, z - .18], max: [x + .7, y + .06, z + .18]}}); }   // shootable
-  return {seed, grid, roomOf, doorOf, rooms, doors, crates, pits, lamps, exit, ver: 0, lay, talls, tallOf};
+  // 7b. red gas tanks on the walls, rare (rooms get 0,0,0,1,2 at random: ~3 per 5 rooms), never by a doorway; on a deck wall too
+  const tanks = [];
+  for (const r of rooms) for (let tries = 0, n = [0, 0, 0, 1, 2][Math.floor(R() * 5)]; n && tries < 200; tries++) {
+    const i = ri(r.i0, r.i1 - 1), j = ri(r.j0, r.j1 - 1), k = j * GW + i;
+    if (grid[k] !== FLOOR || lay[k] & 1 || tanks.some(t => Math.hypot(t.i - i, t.j - j) < 4)) continue;
+    const w = N4.find(([a, b]) => grid[(j + b) * GW + i + a] === SOLID && lay[(j + b) * GW + i + a] !== 4);
+    if (!w || !r.doors.every(d => d.cells.every(c => Math.max(Math.abs(c[0] - i), Math.abs(c[1] - j)) >= 3))) continue;
+    const y = (lay[k] & 2) && R() < .5 ? HI + 1.25 : 1.25, p = [i + .5 + w[0] * .27, y, j + .5 + w[1] * .27];
+    tanks.push({tank: 1, i, j, n: [-w[0], -w[1]], p, c: p, st: 0, t: 0, box: {min: [p[0] - .22, y - .42, p[2] - .22], max: [p[0] + .22, y + .42, p[2] + .22]}}); n--;
+  }
+  return {seed, grid, roomOf, doorOf, rooms, doors, crates, pits, lamps, tanks, exit, ver: 0, lay, talls, tallOf};
 }
 function validate(L) {   // self-check: all reachable, doors flush in a wall, rooms whole with doors shut, no 1-wide gaps
   const err = [], g = (i, j) => i < 0 || j < 0 || i >= GW || j >= GW ? SOLID : L.grid[j * GW + i];
@@ -634,6 +750,7 @@ function drawDeck() {
     drawMesh(cube, M.chain(M.T(d.c[0], WALL_H - .07, d.c[1]), M.S(d.hor ? 1.02 : 1.8, .12, d.hor ? 1.8 : 1.02)), d.shut ? [.9, .05, .02] : [.05, .7, .2], 1);   // light bar: fits between the 45 deg corners
   }
   for (const c of LV.crates) if (!c.dead) drawMesh(crateMesh, M.T(c.i + .5, 0, c.j + .5), mul([1, .7, .4], c.flash * .5));
+  for (const t of LV.tanks) drawMesh(t.st === 2 ? tankScorch : tankMesh, M.chain(M.T(...t.p), M.R(1, Math.atan2(t.n[0], t.n[1]))), t.st === 1 && t.t < 3 ? [.5 + .3 * Math.random(), .18, 0] : t.st === 1 ? [.25, .08, 0] : Z3);   // gas tanks (leaking: glows)
   for (const l of LV.lamps) if (l.bad) {   // faulty (or shot) lamps; shot ones are in the baked mesh, so "off" is a dark cover
     if (l.cover) { if (!l.on) drawMesh(lampCover, M.T(...l.p)); } else drawMesh(lampMesh, M.T(...l.p), l.on ? Z3 : [-.85, -.85, -.85]);
   }
@@ -644,8 +761,51 @@ function drawDeck() {
 const lampCover = (() => { const d = []; pushBox(d, [0, 0, 0], [1.44, .08, .39], [.12, .12, .13]); return meshVAO(d); })();
 const medMesh = (() => { const d = []; pushBox(d, [0, 0, 0], [.75, .55, .12], [.85, .86, .88], [.3, 0, .6]);   // white cabinet, red cross
   pushBox(d, [0, 0, .065], [.36, .1, .02], [1, .1, .08], [0, 1, 0]); pushBox(d, [0, 0, .065], [.1, .36, .02], [1, .1, .08], [0, 1, 0]); return meshVAO(d); })();
+/* gas tanks: 1st hit -> the valve goes, a flame jet sprays out of the wall for 3 s (burns monsters and you); 2nd hit (0.25 s later
+   or more), any blast, or 5 s left alone -> it explodes (3 m, hurts you), and the blast sets off other tanks */
+function tankHit(t, boom) {
+  if (t.st >= 2) return;
+  if (boom || (t.st === 1 && t.t > .25)) { t.st = 3; t.fuse = boom ? .12 : 0; return; }   // a blast: a short fuse, so chains ripple
+  if (t.st === 0) { t.st = 1; t.t = 0; sparks(t.c, 14, [1, .8, .4], 4); sndAt(SND('snd_glass1'), .5, t.c);
+    t.loop = playSound(SND('snd_flame'), .55 / (1 + Math.max(0, Math.hypot(t.c[0] - EYE[0], t.c[2] - EYE[2]) - 3) * .12), false, true); }
+}
+function blowTank(t) {
+  t.st = 2; if (t.loop) t.loop.stop(); t.loop = null;
+  explode(t.c, 3, 1.3); sndAt(SND('snd_explode'), 1, t.c); G.punch += .06;
+  const d = Math.hypot(EYE[0] - t.c[0], PL.gy + 1 - t.c[1], EYE[2] - t.c[2]);
+  if (d < 3.4 && levelOf(PL.gy) === levelOf(t.c[1] - 1)) hurtPlayer(60 * (1 - d / 3.4));
+  splash(t.c, 3, 160);   // monsters, corpses, crates, other tanks
+}
+function updateTanks(dt) {
+  for (const t of LV.tanks) {
+    if (t.st === 3 && (t.fuse -= dt) <= 0) blowTank(t);
+    if (t.st !== 1) continue;
+    t.t += dt;
+    const o = [t.p[0] + t.n[0] * .24, t.c[1] + .2, t.p[2] + t.n[1] * .24], d0 = norm([t.n[0], -.06, t.n[1]]);
+    if (t.t < 3) {   // the jet: flamethrower flames out of the valve
+      for (t.acc = (t.acc || 0) + dt * 32; t.acc >= 1; t.acc--) { const d = norm(add(d0, [rand(-.13, .13), rand(-.1, .08), rand(-.13, .13)])), sp = 11 * rand(.85, 1.1);
+        spawn({pos: madd(o, d, .05), vel: madd(mul(d, sp), [0, 1, 0], .3), drag: 1.3, grav: 1.2, life: .75 * rand(.85, 1.15), kind: 1, w0: .16, w1: 1.4,
+          fire: 1, er0: .06, er1: 1.15, smokeAfter: Math.random() < .3, flameHit: 1, dmg: 6, fin: .08, src: t}); }
+      if (Math.random() < dt * 10) rtFlash(madd(o, d0, 1.2), 5, [1.4, .7, .25], .12);   // RT_LIGHTS
+      const q = [EYE[0], PL.gy + 1, EYE[2]], s = clamp(dot(sub(q, o), d0), 0, 3.2);   // you, in the jet?
+      if (!PL.dead && len(sub(q, madd(o, d0, s))) < .45 + s * .12) for (t.pa = (t.pa || 0) + 20 * dt; t.pa >= 5; t.pa -= 5) hurtPlayer(5);
+    } else { if (t.loop) { t.loop.stop(); t.loop = null; } if (Math.random() < dt * 12) sparks(o, 3, [1, .7, .3], 2); }   // sputters...
+    if (t.t > 5) blowTank(t);   // ...and goes up on its own
+  }
+}
+const tankMesh = (() => { const d = [], K = 12;   // red cylinder, hazard band, valve; local -z is the wall
+  const ring = (r, y0, y1, col, m, alt) => { for (let k = 0; k < K; k++) { const a0 = k / K * 6.2832, a1 = (k + 1) / K * 6.2832, P = (a, y) => [Math.sin(a) * r, y, Math.cos(a) * r];
+    const n = [Math.sin((a0 + a1) / 2), 0, Math.cos((a0 + a1) / 2)], c = alt && k & 1 ? alt : col;
+    for (const v of [P(a0, y0), P(a1, y0), P(a1, y1), P(a0, y0), P(a1, y1), P(a0, y1)]) d.push(...v, ...n, ...c, ...m); } };
+  const red = [.72, .06, .04], M0 = [.35, 0, .65];
+  ring(.2, -.4, -.1, red, M0); ring(.205, -.1, .06, [.95, .75, .08], [.2, 0, .4], [.06, .06, .06]); ring(.2, .06, .34, red, M0); ring(.13, .34, .4, red, M0);
+  pushBox(d, [0, .4, 0], [.26, .02, .26], red, M0); pushBox(d, [0, -.4, 0], [.4, .02, .4], [.3, .03, .02], M0);   // caps
+  pushBox(d, [0, .45, 0], [.06, .1, .06], [.5, .52, .55], [.8, 0, .7]); pushBox(d, [0, .5, .06], [.16, .03, .03], [.5, .52, .55], [.8, 0, .7]);   // valve
+  for (const y of [-.25, .2]) pushBox(d, [0, y, -.2], [.34, .05, .1], [.12, .12, .13]);   // wall straps
+  return meshVAO(d); })();
+const tankScorch = (() => { const d = []; pushBox(d, [0, 0, -.22], [.7, 1, .02], [.07, .06, .05]); for (const y of [-.25, .2]) pushBox(d, [0, y, -.19], [.34, .05, .08], [.06, .05, .05]); return meshVAO(d); })();
 function hitLamp(l) {   // shoot a lamp: the first hit makes it faulty (flicker + sparks), the second kills it
-  l.hits = (l.hits | 0) + 1; sparks(l.c, 10, [1, .8, .4], 3);
+  l.hits = (l.hits | 0) + 1; sparks(l.c, 10, [1, .8, .4], 3); if (!l.dead) sndAt(l.hits > 1 ? SND('snd_glass2') : SND('snd_glass1'), l.hits > 1 ? .8 : .55, l.c);
   if (l.hits === 1 && !l.bad) { l.bad = l.cover = 1; l.t = 0; }
   else if (l.hits >= 2) { l.dead = 1; l.on = 0; sparks(l.c, 26, [1, .9, .6], 5); spawn({pos: l.c, vel: [0, -.3, 0], life: 1, kind: 3, w0: .4, w1: 1.2, tint: [.3, .3, .3], er0: .1, er1: 1}); }
   LV.dver = (LV.dver | 0) + 1;   // RT_LIGHTS: re-bake without it
@@ -722,10 +882,21 @@ function flow(fly) {
   }
   return F.D;
 }
-function flowDir(p, D, fly, y = 0) {   // toward the neighbour node nearest the player
-  const k = Math.floor(p[2]) * GW + Math.floor(p[0]), kk = k + nodeL(k, y) * NN; let best = D[kk], to = null;
-  nodeEdges(kk, fly, (nn, a, b) => { if (D[nn] < best) { best = D[nn]; to = [a + .5, 0, b + .5]; } });
-  return to ? norm([to[0] - p[0], 0, to[2] - p[2]]) : [0, 0, 0];
+const PATH_STICK = 4;   // m: how much longer a route a monster accepts before it drops the way-point it committed to
+function flowDir(p, D, fly, y = 0, m = null) {   // where to head when you are out of sight: a committed way-point along the field
+  // The way-point is the farthest cell it can walk straight to along the downhill path (<= 8 steps). It keeps it until it gets
+  // there, or until going via it costs more than PATH_STICK extra - so you dancing left-right behind a pillar no longer flips
+  // its side every step (it used to dither in front of the obstacle forever).
+  const k = Math.floor(p[2]) * GW + Math.floor(p[0]), kk = k + nodeL(k, y) * NN, far = c => Math.hypot(c[0] - p[0], c[2] - p[2]);
+  const step = n => { let best = D[n], to = null; nodeEdges(n, fly, (nn, a, b) => { if (D[nn] < best) { best = D[nn]; to = {n: nn, c: [a + .5, 0, b + .5]}; } }); return to; };
+  let w = m && m.wp;
+  if (w && (far(w.c) < .45 || far(w.c) > w.d + 1 || !(D[w.n] + far(w.c) <= D[kk] + PATH_STICK))) w = null;   // reached / knocked off / too long
+  if (!w) {
+    for (let n = kk, s = 0; s < 8; s++) { const t = step(n); if (!t) break; n = t.n;
+      if (s && !sight(p, t.c, m ? m.T.r : .3, fly, y, nodeH(n % NN, n >= NN ? 1 : 0))) break; w = t; }
+    if (w) w.d = far(w.c); if (m) m.wp = w;
+  }
+  return w ? norm([w.c[0] - p[0], 0, w.c[2] - p[2]]) : [0, 0, 0];
 }
 function vSolid(i, j, x, y, z) {   // is (x, y, z) inside this cell's floor (pit bottom / ramp), ceiling or deck slab?
   const f = LV.lay[j * GW + i] | 0;
@@ -776,7 +947,7 @@ function rayBox(o, d, b) {
 const y0 = t => t.pos[1] + (t.T.y0 || 0);   // flyers hover: their box hangs around pos[1]
 const boxOf = t => t.box || (t.T ? {min: [t.pos[0] - t.T.r, y0(t), t.pos[2] - t.T.r], max: [t.pos[0] + t.T.r, y0(t) + t.T.h, t.pos[2] + t.T.r]} : tBox(t));
 const centerOf = t => t.c || (t.T ? [t.pos[0], y0(t) + t.T.h * .6, t.pos[2]] : tCenter(t));
-const hittables = () => TARGETS.concat(mons, LV.crates, LV.lamps, corpses.filter(c => !c.pit && c.t > .4 && c.t < 8));   // dummies + live monsters + crates + lamps + lying corpses
+const hittables = () => TARGETS.concat(mons, LV.crates, LV.lamps, LV.tanks.filter(t => t.st < 2), corpses.filter(c => !c.pit && c.t > .4 && c.t < 8));   // dummies + live monsters + crates + lamps + gas tanks + lying corpses
 function raycast(o, d, maxT = 200, skip = null) {  // -> {t, target}
   let best = {t: rayWorld(o, d, maxT), target: null};
   for (const tg of hittables()) {
@@ -786,7 +957,7 @@ function raycast(o, d, maxT = 200, skip = null) {  // -> {t, target}
   }
   return best;
 }
-const nearest = (from, n, reach, not) => hittables().filter(t => !t.dead && !t.crate && !t.lamp && !t.corpse && t !== not && len(sub(centerOf(t), from)) < reach)
+const nearest = (from, n, reach, not) => hittables().filter(t => !t.dead && !t.crate && !t.lamp && !t.corpse && !t.tank && t !== not && len(sub(centerOf(t), from)) < reach)
   .sort((a, b) => len(sub(centerOf(a), from)) - len(sub(centerOf(b), from))).slice(0, n);
 
 /* ============================================================ 5. weapon profiles (from the Crimsonland listing)
@@ -953,6 +1124,7 @@ function select(base) {   // equip; equipping = owning
   W = weapons[base]; OWN.add(base);
   const sel = $('list'); sel.innerHTML = ''; for (const k of [...OWN].sort()) sel.add(new Option(weapons[k].label, k)); sel.value = base;
   Object.assign(G, {ammo: W.clip, reloadT: -1, nextShot: 0, draw: 0, heat: 0, spin: 0, spinV: 0, shot: 0, fired: 0});
+  if (LOAD.done) playSound(SND('snd_click'), .6);
 }
 
 /* ============================================================ 7. effects: particles + instance writer */
@@ -1067,6 +1239,7 @@ function hitTarget(t, dmg, impulse = 1, dir = null, point = null, blood = 1) {
   t.flash = 1;
   if (t.lamp) { hitLamp(t); return; }
   if (t.crate) { t.hp -= dmg; if (t.hp <= 0) breakCrate(t); return; }
+  if (t.tank) { tankHit(t, impulse >= 2); return; }   // impulse 2+: a rocket / blast
   if (t.corpse) {   // shooting a corpse: more blood each hit, then it bursts into parts
     bleed(point || t.c, dir ? mul(dir, -.4) : [0, 1, 0], clamp(dmg / 14, .4, 2));
     if ((t.hp -= dmg) <= 0) { t.dead = 1; corpses = corpses.filter(c => c !== t); const big = t.m.T.r * 2;
@@ -1077,6 +1250,7 @@ function hitTarget(t, dmg, impulse = 1, dir = null, point = null, blood = 1) {
   STATS.dmg += Math.max(0, dmg); STATS.hits++;
   const flat = dir ? norm([dir[0], 0, dir[2]]) : norm(sub(t.pos, [EYE[0], 0, EYE[2]]));
   t.hp -= dmg; t.kb = madd(t.kb, flat, impulse * 1.4 / (t.T.r * 2));
+  if (t.hp > 0 && clock - (t.hs || 0) > .3 && (dmg > 15 || Math.random() < .3)) { t.hs = clock; sndAt(SND('snd_mhit' + Math.floor(Math.random() * 3)), .7, t.pos); }
   if (t.T.anim && !t.fl && !t.intro && dmg > 3) t.fl = {c: 'Get_Hit_' + (1 + Math.floor(Math.random() * 4)), t0: clock};   // crawler: a flinch over whatever it is doing
   if (blood) bleed(point || centerOf(t), dir || flat, clamp(dmg / 14, .4, 3) * blood);
   if (t.hp <= 0) killMon(t, dir || flat);
@@ -1176,26 +1350,28 @@ function impact(pr, p, target) {
     spawn({pos: p, life: .3, kind: 5, w0: pr.r * 2, w1: pr.r * 9 + (A.splash || 0) * 2, tint: col});
     spawn({pos: p, life: .2, kind: 0, w0: pr.r * 10, tint: col});
     if (!flesh) sparks(p, 8, col, 3);
+    sndAt(A.splash ? SND('snd_explode') : SND('snd_plasma_hit'), A.splash ? .9 : .6, p);
     if (A.splash) { splash(p, A.splash, pr.dmg * .5); spawn({pos: p, life: .6, kind: 4, v: 1, w0: .5, w1: A.splash * 2.2, tint: col, fp: 2}); }
     if (A.split && pr.gen < 2) {   // Splitter: the shot splits in two and flies on to the nearest others
       const others = nearest(p, 2, 30, target);
       for (let i = 0; i < 2; i++) {
         const goal = others[i] ? centerOf(others[i]) : madd(p, [rand(-5, 5), rand(0, 2), rand(-5, 5)], 1);
+        if (!i) sndAt(SND('snd_split'), .4, p);
         projs.push(Object.assign({}, pr, {pos: madd(p, norm(sub(goal, p)), .5), dir: norm(sub(goal, p)), age: 0, gen: pr.gen + 1, dmg: pr.dmg * .7, r: pr.r * .85}));
       }
     }
   } else if (A.fx === 'rocket') {
     hitTarget(target, pr.dmg, 2, pr.dir, p);
     if (A.splash) splash(p, A.splash, pr.dmg * .6);
-    explode(p, A.splash || .8, pr.scale);
+    explode(p, A.splash || .8, pr.scale); sndAt(SND('snd_rocket_hit'), .45 + .4 * pr.scale, p);
   } else if (A.fx === 'pulse') {
     hitTarget(target, pr.dmg, .4, pr.dir, p);
     spawn({pos: p, life: .25, kind: 5, w0: .2, w1: 1.2, tint: col});
-  } else if (A.fx === 'ion') ionStrike(p, target, pr.dmg, A, pr.dir);
+  } else if (A.fx === 'ion') { ionStrike(p, target, pr.dmg, A, pr.dir); if (A.big) sndAt(SND('snd_explode'), .8, p); }
 }
 function flameDamage(p) {
   for (const t of hittables()) {
-    if (t.dead || t.lamp || t.corpse) continue;   // flames roll over corpses
+    if (t.dead || t.lamp || t.corpse || t === p.src) continue;   // flames roll over corpses (and a tank's own jet over it)
     const b = boxOf(t), q = p.pos.map((v, i) => clamp(v, b.min[i], b.max[i]));
     if (len(sub(q, p.pos)) < mix(p.w0, p.w1, p.age / p.life) * .35) {
       hitTarget(t, p.dmg, .05, p.vel, q, 0); p.done = 1;   // a kill clears burn: never re-light a corpse, it would glow forever
@@ -1274,7 +1450,7 @@ function dropWeapon() {   // a loaded weapon from this level's band, never the o
   return any[Math.floor(Math.random() * any.length)];
 }
 const BONUS_P = 1 / 9, MEDIKIT_P = 10 / 162, MEDIKIT_HP = 10;   // Crimsonland: a bonus on 1 kill in 9; MediKit = 10 of the 162 type rolls; +10 HP
-function gainXP(n) { PL.xp += n; while (PL.xp > lvlNeed(PL.lvl)) { PL.lvl++; say('LEVEL UP!  LV ' + PL.lvl); } }
+function gainXP(n) { PL.xp += n; while (PL.xp > lvlNeed(PL.lvl)) { PL.lvl++; say('LEVEL UP!  LV ' + PL.lvl); playSound(SND('snd_levelup'), .6); } }
 const STATS = {dmg: 0, hits: 0};   // damage dealt to monsters (balance sim reads this)
 const PL = {hp: 100, hurt: 0, dead: 0, won: 0, kills: 0, best: 0, crouch: false, jy: 0, vy: 0, eye: 1.62, xp: 0, lvl: 1, xp0: 0, lvl0: 1};   // jy/vy: jump height / speed
 function partPose(p, m) {
@@ -1308,6 +1484,7 @@ function spawnMon(r, T) {   // on a free floor cell of the room, > 6 m from the 
 function lockRoom(r) {
   r.state = 'active'; LV.active = r; r.t = 0; r.next = 0; r.waveT = 14;
   for (const d of r.doors) d.shut = true;
+  playSound(SND('snd_door'), .7);
   const exit = r === LV.exit ? 1 : 0, total = Math.round((5 + r.depth * 2.5) * (1 + exit * .6)), nw = clamp(1 + (r.depth >> 1) + exit, 1, 4);
   const pool = MT.filter(T => T.w > 0 && T.minD <= r.depth + exit * 2), sum = pool.reduce((s, T) => s + T.w, 0);
   const pick = () => { let x = Math.random() * sum; for (const T of pool) if ((x -= T.w) <= 0) return T; return pool[0]; };
@@ -1321,16 +1498,16 @@ function updateRoom(dt) {
     const was = d.open >= .98; d.open = clamp(d.open + (d.shut ? -dt : dt) * 1.6, 0, 1);
     if (was !== d.open >= .98) { LV.ver++; LV.dver = (LV.dver | 0) + 1; }   // passability changed: paths (and door light) rebuilt
   }
-  flickerLamps(dt);
+  flickerLamps(dt); updateTanks(dt);
   for (const d of drops) if (!PL.dead && Math.hypot(d.pos[0] - EYE[0], d.pos[2] - EYE[2]) < 1 && Math.abs(d.pos[1] - PL.gy) < 1.5) {   // walk over a dropped weapon: it is yours
     d.got = 1;
-    if (d.med) { if (PL.hp < 100) PL.hp = Math.min(100, PL.hp + MEDIKIT_HP); say('MEDIKIT +' + MEDIKIT_HP); }
-    else { select(d.base); say('GOT ' + weapons[d.base].label); }
+    if (d.med) { if (PL.hp < 100) PL.hp = Math.min(100, PL.hp + MEDIKIT_HP); say('MEDIKIT +' + MEDIKIT_HP); playSound(SND('snd_heal'), .7); }
+    else { select(d.base); say('GOT ' + weapons[d.base].label); playSound(SND('snd_pickup'), .8); }
   }
   drops = drops.filter(d => !d.got);
   for (const T of LV.talls) { const m = T.med;   // wall medipack: step up to it on the deck (+50 HP, once)
     if (m && !m.used && !PL.dead && PL.hp < 100 && levelOf(PL.gy) && Math.hypot(EYE[0] - m.p[0] - m.n[0] * .6, EYE[2] - m.p[1] - m.n[1] * .6) < 1.1) {
-      m.used = true; PL.hp = Math.min(100, PL.hp + 50); say('MEDIPACK +50'); spawn({pos: [EYE[0], EYE[1] - .3, EYE[2]], life: .5, kind: 0, w0: 2, tint: [.2, 1, .3]}); } }
+      m.used = true; PL.hp = Math.min(100, PL.hp + 50); say('MEDIPACK +50'); playSound(SND('snd_heal'), .8); spawn({pos: [EYE[0], EYE[1] - .3, EYE[2]], life: .5, kind: 0, w0: 2, tint: [.2, 1, .3]}); } }
   const i = Math.floor(EYE[0]), j = Math.floor(EYE[2]), here = LV.here = LV.rooms[LV.roomOf[j * GW + i]];
   // lock once you are anywhere inside (along the walls too) and clear of every doorway, so no door can shut on you
   const clear = here && here.doors.every(d => d.cells.every(([a, b]) => Math.hypot(EYE[0] - clamp(EYE[0], a, a + 1), EYE[2] - clamp(EYE[2], b, b + 1)) > .6));
@@ -1341,12 +1518,12 @@ function updateRoom(dt) {
   if (r.queue.length) { if (r.t > r.next) { spawnMon(r, r.queue.shift()); r.next = r.t + .35; } }
   else if (r.waves.length) { if (mons.length <= 1 || r.t > r.waveT) { r.queue = r.waves.shift(); r.waveT = r.t + 14; } }
   else if (!mons.length) {
-    r.state = 'clear'; LV.active = null; for (const d of r.doors) d.shut = false;
+    r.state = 'clear'; LV.active = null; for (const d of r.doors) d.shut = false; playSound(SND('snd_door'), .55);
     if (r === LV.exit) { PL.won = 4; say('DECK CLEARED - NEXT DECK...'); } else say('ROOM CLEARED');
   }
 }
 function breakCrate(c) {
-  c.dead = true; LV.grid[c.j * GW + c.i] = FLOOR; LV.ver++;
+  c.dead = true; LV.grid[c.j * GW + c.i] = FLOOR; LV.ver++; sndAt(SND('snd_crate'), .8, c.c);
   for (let i = 0; i < 10; i++) gibs.push({pos: add(c.c, [rand(-.3, .3), rand(0, .3), rand(-.3, .3)]), vel: [rand(-3, 3), rand(2, 5), rand(-3, 3)],
     rot: [rand(0, 6), rand(0, 6)], spin: rand(-12, 12), s: rand(.1, .24), life: 6, age: 0, wood: 1});
   sparks(c.c, 8, [1, .75, .4]); spawn({pos: c.c, vel: [0, .6, 0], life: 1.2, kind: 3, w0: .6, w1: 1.8, tint: [.3, .27, .22], er0: .1, er1: 1});
@@ -1354,7 +1531,7 @@ function breakCrate(c) {
 }
 function startLevel(seed, again = false) {   // a fresh deck, or (again) the same one after a death: level / XP go back to the deck's start
   if (again && !KEEP_LEVEL_ON_DEATH) Object.assign(PL, {xp: PL.xp0, lvl: PL.lvl0}); else Object.assign(PL, {xp0: PL.xp, lvl0: PL.lvl});
-  if (LV) { gl.deleteBuffer(LV.mesh.buf); gl.deleteVertexArray(LV.mesh.vao); }
+  if (LV) { gl.deleteBuffer(LV.mesh.buf); gl.deleteVertexArray(LV.mesh.vao); for (const t of LV.tanks) if (t.loop) t.loop.stop(); }   // + a jet still hissing
   LV = generate(seed); LV.mesh = buildDeckMesh(LV);
   const err = validate(LV); if (err.length) console.error('deck ' + seed + ':', err);
   mons = []; corpses = []; gibs = []; decals = []; drops = []; projs = []; parts = []; zaps = []; delete FLOW.true; delete FLOW.false;
@@ -1393,6 +1570,7 @@ function killMon(m, d) {
   if (m.dead) return;
   const burning = m.burn > 0, pit = cellAt(Math.floor(m.pos[0]), Math.floor(m.pos[2])) === PIT, r = LV.active;
   m.dead = true; m.burn = 0; m.flash = 0; PL.kills++; gainXP(XP_KILL[m.T.name] || 100);
+  sndAt(SND(SHOVE[m.T.name] ? 'snd_mhit' + Math.floor(Math.random() * 3) : 'snd_mdie' + Math.floor(Math.random() * 6)), .75, m.pos);   // spiders / bats squish (as in Bloodworks)
   // weapon drop: 8%, brutes 50%, the last one in the exit room always; the weapon comes from the level's band (dropWeapon)
   const last = r === LV.exit && !r.queue.length && !r.waves.length && mons.every(o => o.dead), base = dropWeapon();
   if (base && Math.random() < (last ? 1 : m.T === MT[3] ? .5 : .08))
@@ -1400,7 +1578,7 @@ function killMon(m, d) {
   if (!drops.some(x => x.med) && Math.random() < BONUS_P * MEDIKIT_P)   // a MediKit (only one lies around at a time, as in Crimsonland)
     drops.push({med: 1, pos: pit ? [EYE[0], PL.gy, EYE[2]] : [m.pos[0] + .4, m.gy, m.pos[2]], t: rand(0, 6)});
   const lb = corpseBox(m), w = M.mul(M.T(m.pos[0], m.gy, m.pos[2]), M.R(1, m.yaw));   // shootable: a box round the body as it will lie
-  corpses.push({m, t: 0, burn: burning ? 3 : 0, pit, corpse: 1, hp: m.T.hp * .5, lb, iw: M.mul(M.R(1, -m.yaw), M.T(-m.pos[0], -m.gy, -m.pos[2])),
+  corpses.push({m, t: 0, burn: burning ? 3 : 0, pit, corpse: 1, hp: m.T.hp, lb, iw: M.mul(M.R(1, -m.yaw), M.T(-m.pos[0], -m.gy, -m.pos[2])),
     c: M.pt(w, [0, 1, 2].map(i => (lb.min[i] + lb.max[i]) / 2))}); if (corpses.length > 45) corpses.shift();
   if (pit) return;   // it fell: no gore up here
   const c = centerOf(m), big = m.T.r * 2;
@@ -1426,6 +1604,7 @@ function gibBurst(c, d, big, n) {   // flesh chunks flying from c along d
 function hurtPlayer(d) {   // one blow: red flash + a jolt of the view
   if (PL.dead) return;
   PL.hp -= d; PL.hurt = Math.min(1, PL.hurt + d * .05); PL.flash = 1; G.punch += .03;
+  playSound(PL.hp > 0 ? SND('snd_phit' + (1 + Math.floor(Math.random() * 5))) : SND('snd_pdie'), PL.hp > 0 ? .9 : 1);
   if (PL.hp <= 0) { PL.hp = 0; PL.dead = 3; PL.best = Math.max(PL.best, PL.kills); say(PL.fell ? 'YOU FELL - RESTARTING THIS DECK' : 'YOU DIED - RESTARTING THIS DECK'); }
 }
 function separate() {   // hard bodies after everyone moved: no two monsters overlap and you can't walk through them.
@@ -1466,7 +1645,7 @@ function updateHorde(dt) {
   for (const m of mons) {
     m.flash = Math.max(0, m.flash - dt * 6);
     if (m.intro) { if (clock - m.intro.t0 < CRAWL.clips[m.intro.c].len) { m.vf = 0; continue; } m.intro = null; }   // entrance: no moving or striking yet
-    if (m.T.anim && CRAWL && !m.seen && (m.seen = m.inR || sight(m.pos, me, m.T.r, false, m.gy, PL.gy)) && !m.inR) m.shout = clock;   // first sight: a roar (not if already on you)
+    if (m.T.anim && CRAWL && !m.seen && (m.seen = m.inR || sight(m.pos, me, m.T.r, false, m.gy, PL.gy)) && !m.inR) { m.shout = clock; sndAt(SND('snd_roar'), 1, m.pos); }   // first sight: a roar (not if already on you)
     if (m.shout && clock - m.shout < CRAWL.clips.Shout.len / 1.3 - .3) { m.vf = 0; m.yaw += wrapA(Math.atan2(EYE[0] - m.pos[0], EYE[2] - m.pos[2]) - m.yaw) * (1 - Math.exp(-6 * dt)); continue; }
     const fly = !!m.T.fly, to = sub(me, m.pos), dist = Math.hypot(to[0], to[2]); to[1] = 0;
     // reach with hysteresis: it stops ~0.8 m out (claws short of your face) and keeps striking until you are 0.35 m further;
@@ -1476,8 +1655,8 @@ function updateHorde(dt) {
     let v = [0, 0, 0];
     if (!m.inR) {   // straight at you when the way is clear, else follow the path field
       let dir;
-      if (!sight(m.pos, me, m.T.r, fly, m.gy, PL.gy)) dir = flowDir(m.pos, fly ? air : walk, fly, m.gy);
-      else {   // in the open: far, aim beside you (own offset, fades as it closes in); near, curve round onto its ring slot
+      if (!sight(m.pos, me, m.T.r, fly, m.gy, PL.gy)) dir = flowDir(m.pos, fly ? air : walk, fly, m.gy, m);
+      else { m.wp = null;   // in the open: far, aim beside you (own offset, fades as it closes in); near, curve round onto its ring slot
         let P = me;
         if (m.rg) { const b = Math.atan2(-to[0], -to[2]), th = b + clamp(wrapA(m.slot - b), -.5, .5), rr = Math.max(reach - .15, dist - 1.5);
           P = [me[0] + Math.sin(th) * rr, 0, me[2] + Math.cos(th) * rr]; if (blocked(Math.floor(P[0]), Math.floor(P[2]), fly)) P = me; }
@@ -1492,7 +1671,7 @@ function updateHorde(dt) {
     }
     else {   // in reach: a blow every HIT_T s, timed with the attack animation
       m.atk = Math.min(1, m.atk + dt * 4); m.atkT += dt;
-      const ht = HIT_T[m.T.name] || .9; if ((m.cd -= dt) <= 0) { m.cd = ht; hurtPlayer(m.T.dps * ht); }
+      const ht = HIT_T[m.T.name] || .9; if ((m.cd -= dt) <= 0) { m.cd = ht; sndAt(SND('snd_woosh'), .35, m.pos); hurtPlayer(m.T.dps * ht); }
     }
     const ty = Math.atan2(...(len(v) > .05 && m.atk < .5 ? [v[0], v[2]] : [to[0], to[2]])), dy = ty - m.yaw;
     m.yaw += Math.atan2(Math.sin(dy), Math.cos(dy)) * (1 - Math.exp(-10 * dt));   // turn smoothly
@@ -1662,9 +1841,8 @@ const ANIM = {   // fill o.off / o.root / o.L (local bone rotations) / o.tg (lim
     const lean = (.06 * vf + .1 * run) * e, yw = -.1 * mv * Math.cos(ph);   // lean into the run; the hip swings forward with its leg
     o.off = [.03 * sway * (1 - .5 * run) * mv, (.025 * (1 - run) - .05 * run) * bob * mv - .02 * run - .22 * d, .2 * a * bump(k, .35, .45, .6, .95) + .06 * d];   // walk: vaults over the foot; run: sinks on it
     o.root = M.chain(M.R(0, lean), M.R(1, yw), M.R(2, -.04 * sway * mv)); o.L.spine1 = M.R(1, -1.4 * yw);   // chest twists against the hips
-    let look = Math.atan2(EYE[0] - m.pos[0], EYE[2] - m.pos[2]) - m.yaw; look = clamp(Math.atan2(Math.sin(look), Math.cos(look)), -.7, .7) * e;
-    o.L.neck0 = M.mul(M.R(1, .4 * yw + .5 * look), M.R(0, -lean - .4 * d));   // head stays level and on target while the body works under it
-    o.L.neck1 = M.mul(M.R(1, .5 * look), M.R(0, a * (-.3 * gape + .45 * snap - .15 * ease(k, .6, .9))));
+    o.L.neck0 = M.mul(M.R(1, .4 * yw), M.R(0, -lean - .4 * d));   // head stays level while the body works under it (aim at you: rigPose)
+    o.L.neck1 = M.R(0, a * (-.3 * gape + .45 * snap - .15 * ease(k, .6, .9)));
     o.L.jaw = M.R(0, .08 * e + .04 * Math.sin(ph * .5) * e + a * (.7 * gape - .78 * snap) + .12 * d);
     for (let i = 0; i < 5; i++) o.L['tail' + i] = M.mul(M.R(1, .07 * mv * Math.sin(ph - .8 - i * .7)), M.R(0, .04 * run * mv * Math.cos(2 * ph - i * .6) - .12 * d));   // lagging balance wave; droops dead
     if (d) { o.fall = M.id(); o.lie = .04; }   // no roll: stays belly-down, ground fix + sinking only
@@ -1729,6 +1907,12 @@ function rigPose(m, R, d) {   // FK + FABRIK -> skin matrices in R.buf, returns 
   const o = {off: [0, 0, 0], root: M.id(), L: {}, tg: {}, w: {}, ch: R.ch, fall: null};
   if (!m.tgLast) m.tgLast = {};
   ANIM[m.T.anim && CRAWL ? m.T.anim : R.kind](m, o, d);
+  if (!d && R.by.neck1 && !m.intro && m.pos) {   // every head tracks you (the body faces where it walks): up to ~70 deg aside, ~30 up/down, eased
+    const dx = EYE[0] - m.pos[0], dz = EYE[2] - m.pos[2], a = Math.atan2(dx, dz) - m.yaw;
+    const yw = clamp(Math.atan2(Math.sin(a), Math.cos(a)), -1.2, 1.2), pt = clamp(Math.atan2(EYE[1] - m.pos[1] - m.T.h * .85, Math.hypot(dx, dz)), -.5, .5);
+    m.lk = m.lk ? [mix(m.lk[0], yw, .12), mix(m.lk[1], pt, .12)] : [yw, pt];
+    for (const n of ['neck0', 'neck1']) o.L[n] = M.mul(M.mul(M.R(1, m.lk[0] * .5), M.R(0, -m.lk[1] * .5)), o.L[n] || M.id());
+  }
   if (!d) m.tgLast = o.tg;
   const Q = {}, H = {}, pts = [];
   for (const b of R.bones) {
@@ -1778,6 +1962,7 @@ function fire(now) {
   if (!W || G.reloadT >= 0 || G.draw < .9 || now < G.nextShot) return;
   if (G.ammo <= 0) { startReload(); return; }
   G.nextShot = now + W.interval * 1000; G.fired = now;
+  if (!LOOP[W.slug]) { const w = WSND[W.slug] || WSND.pistol; playSound(SND(w[0]), w[1]); }
   const per = Math.min(W.cost, G.ammo); G.ammo -= per;
   const aim = raycast(EYE, FWD, 300), goal = madd(EYE, FWD, Math.max(aim.t, W.A.fx === 'rail' ? 30 : 2));   // rails converge far so they stay on the line they pierce
   const used = new Set();
@@ -1885,7 +2070,7 @@ function drawRocketBodies(vp) {
     drawMesh(cube, m, [.12, .1, .05]);
   }
 }
-function startReload() { if (W && G.reloadT < 0 && G.ammo < W.clip && W.reload > 0) G.reloadT = 0; }
+function startReload() { if (W && G.reloadT < 0 && G.ammo < W.clip && W.reload > 0) { G.reloadT = 0; playSound(SND('snd_reload_begin'), .9); } }
 
 /* ============================================================ 9. weapon pose: hand anchor, convergence, recoil, reload anims */
 const env = (t, a, b) => ease(t, a, b), bump = (t, a, b, c, d) => ease(t, a, b) - ease(t, c, d);
@@ -1970,13 +2155,14 @@ addEventListener('keydown', e => {
   keys[e.code] = true;
   if (e.code === 'KeyR') startReload();
   if (e.code === 'KeyM') toggleMap();
+  if (e.code === 'KeyN') setMusic((window.MUSIC_OFF = !window.MUSIC_OFF) ? null : SND('snd_music'));   // music on / off
   if (e.code === 'KeyC') PL.crouch = !PL.crouch;
   if (e.code === 'KeyQ' || e.code === 'KeyE') cycle(e.code === 'KeyE' ? 1 : -1);
   if (/^Digit[1-9]$/.test(e.code)) { const k = [...OWN].sort()[+e.code.slice(5) - 1]; if (k) select(k); }
   if (e.code === 'Space') { e.preventDefault(); jump(); }
 });
 const toggleMap = () => $('map').style.display = $('map').style.display === 'block' ? 'none' : 'block';
-function jump() { if (!PL.jy && !PL.dead) { PL.vy = 5.5; PL.crouch = false; } }   // ~0.95 m hop; collision stays 2D, so no landing on crates
+function jump() { if (!PL.jy && !PL.dead) { PL.vy = 5.5; PL.crouch = false; playSound(SND('snd_jump'), .4); } }   // ~0.95 m hop; collision stays 2D, so no landing on crates
 addEventListener('keyup', e => keys[e.code] = false);
 let lastPtr = TOUCH ? 'touch' : 'mouse';
 cv.addEventListener('pointerdown', e => lastPtr = e.pointerType, true);
@@ -2106,7 +2292,7 @@ async function autoLoad() {
   if (TEST_ALL_WEAPONS) Object.keys(weapons).forEach(k => OWN.add(k));
   const first = weapons.pistol42 ? 'pistol42' : Object.keys(weapons)[0]; if (first) select(first);   // the run starts with the pistol in hand
   if (LOAD.miss) $('note').textContent = LOAD.miss + ' files missing from Crimsonland/ - serve this folder over http, or drop files here';
-  LOAD.done = 1;
+  LOAD.done = 1; setMusic(SND('snd_music'));   // starts on the first click / tap / key (browsers need a gesture)
 }
 
 /* ============================================================ 10c. RT_LIGHTS: ray-traced (scanline) lamp light, one lightmap per floor
@@ -2233,7 +2419,7 @@ function frame(now) {
   const ml = Math.min(1, len(mv)); moving = ml > .05 ? 1 : 0;
   if (moving && !PL.dead) { const p = [EYE[0], 0, EYE[2]]; moveCircle(p, mul(norm(mv), 5 * ml * (PL.crouch ? .5 : 1)), dt, .35, 2, PL.gy); EYE = [p[0], EYE[1], p[2]]; }
   PL.gy = groundAt(EYE[0], EYE[2], PL.gy);                                                    // floor / ramp / deck under you
-  PL.vy -= 16 * dt; PL.jy = Math.max(0, PL.jy + PL.vy * dt); if (!PL.jy) PL.vy = 0;          // jump arc
+  PL.vy -= 16 * dt; PL.jy = Math.max(0, PL.jy + PL.vy * dt); if (!PL.jy) { if (PL.vy < -1) playSound(SND('snd_land'), Math.min(.8, .35 - PL.vy * .06)); PL.vy = 0; }          // jump arc
   PL.eye = mix(PL.eye, PL.crouch ? 1 : 1.62, 1 - Math.exp(-12 * dt));                        // crouch: eye 1.0 m, half speed
   if (!PL.dead && !PL.jy && cellAt(Math.floor(EYE[0]), Math.floor(EYE[2])) === PIT) { PL.fell = 1; hurtPlayer(PL.hp); }   // stepped into a pit (a jump clears it)
   const dk = PL.dead ? ease(3 - PL.dead, 0, .9) : 0, ft = 3 - PL.dead;                        // death: drop to the floor and roll over
@@ -2253,9 +2439,10 @@ function frame(now) {
     G.recoilV += (-G.recoil * 180 - G.recoilV * 18) * dt; G.recoil += G.recoilV * dt; G.slide = Math.max(0, (G.slide || 0) - dt * 12);
     G.heat = Math.max(0, G.heat - dt * (G.reloadT >= 0 ? .9 : .35));
     const firing = (mouseDown || keys.KeyF || TC.fire !== null) && G.reloadT < 0 && !PL.dead;
+    gunLoop(firing && G.ammo > 0);
     G.spinV = mix(G.spinV, firing ? 28 : (G.reloadT >= 0 ? 0 : 3), 1 - Math.exp(-dt * (firing ? 4 : 1.5)));
     G.spin += G.spinV * dt;
-    if (G.reloadT >= 0) { G.reloadT += dt / W.reload; if (G.reloadT >= 1) { G.reloadT = -1; G.ammo = W.clip; } }
+    if (G.reloadT >= 0) { G.reloadT += dt / W.reload; if (G.reloadT >= 1) { G.reloadT = -1; G.ammo = W.clip; playSound(SND('snd_reload_end'), .7); } }
     wm = weaponMatrix(now, dt);
     MZ = W.muzzles.map(m => {
       const pm = W.part.cluster && W.anim === 'minigun' ? M.id() : (W.part.barrel && wm.pose.parts.barrel) || M.id();

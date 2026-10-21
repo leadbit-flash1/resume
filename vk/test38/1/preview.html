@@ -2240,12 +2240,12 @@ const RING = (() => {
 })();
 const PAD = [
   {name: 'stick', src: 'joy_leftstick', x: 'left', y: 'bottom', ox: .2, oy: .26, s: 120},
-  {name: 'fire', src: 'joy_fire1', x: 'right', y: 'bottom', ox: .19, oy: .3, s: 80},
+  {name: 'fire', src: 'joy_fire1', x: 'right', y: 'bottom', ox: .36, oy: .38, s: 80},   // (swapped with reload; a bit higher: clear of crouch)
   {name: 'fire', src: 'joy_fire1', x: 'left', y: 'top', ox: .17, oy: .28, s: 80},
   {name: 'jump', src: 'joy_jump', x: 'right', y: 'bottom', ox: .14, oy: .54, s: 80},
   {name: 'crouch', src: 'joy_crouch', x: 'right', y: 'bottom', ox: .33, oy: .15, s: 80},
   {name: 'cycle', src: 'joy_cycle', x: 'right', y: 'bottom', ox: .53, oy: .15, s: 60},
-  {name: 'reload', label: 'R', x: 'right', y: 'bottom', ox: .36, oy: .36, s: 56},
+  {name: 'reload', label: 'R', x: 'right', y: 'bottom', ox: .19, oy: .3, s: 56},
   {name: 'map', label: 'MAP', x: 'right', y: 'top', ox: .3, oy: .09, s: 50}];
 for (const b of PAD) b.tex = b.src ? uiTex('newtex/' + b.src + '.png') : RING;
 const U = () => Math.min(cv.width, cv.height) / 360;

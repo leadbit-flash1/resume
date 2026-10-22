@@ -110,9 +110,9 @@ addEventListener("pageshow", function(){ pauseOff(); });          /* bfcache res
 /* PITFALLS ALREADY HIT (each is commented where it lives; search the quoted words before changing that code):
    - paths: "64-bit" flow costs, "Route commitment" / PATH_STICK (dodging behind cover), "no cutting a corner over a drop", "ledge"
    - monsters: reach hysteresis "flicker", "cd set here", "hard bodies" (separate: wall re-check, dummies), heads "tracks you"
-   - level mesh: "mitred" bevels, "END CAPS" (door z-fight, theme colour), "reactor cells", door "light bar" width, "ramp side" (white theme), deck edge "over a doorway", "amber stripes" on lintels
+   - level mesh: "mitred" bevels, "END CAPS" (door z-fight, theme colour), "reactor cells", door "light bar" width, "ramp side" (white theme), deck edge "over a doorway", "amber stripes" on lintels, ramp "slope normal", RT live window "fade them out"
    - corpses: "corpseBox" (fitted to the death pose), "every corpse must sink" (shootable 0.4-8 s), "clip-driven deaths"
-   - crawler: entrance choice "mid-air", "dl" death clip length; bat: spawn flash "where it hovers", death "o.lie" (falls from its hover height); weapons: "hingeSplit"; sound: "not 'S'", focus block (no strict) */
+   - crawler: entrance choice "mid-air", spawn "same purple flash" (floor or ceiling), close range "posed hit box" + T.front (see-through / missed shots), "dl" death clip length; bat: spawn flash "where it hovers", death "o.lie" (falls from its hover height); weapons: "hingeSplit"; sound: "not 'S'", focus block (no strict) */
 /* ============================================================ 0. sound (sound2.js: playSound / setMusic; sounds/ from the Bloodworks
    sources). Without sound2.js the game stays silent. The game only calls the helpers below. */
 if (!window.playSound) { window.playSound = () => ({stop() {}}); window.setMusic = () => {}; }
@@ -312,7 +312,10 @@ vec3 rtLight(vec3 p, vec3 n) {   // RT_LIGHTS: this floor's lightmap (+ the live
     if (all(greaterThanEqual(q1, vec2(0.0))) && all(lessThan(q1, vec2(1.0)))) { up = true; L = texture(uLM1, vec2((q1.x + float(k)) * 0.5, q1.y)).rgb; }
   }
   if (!up) L = texture(uLM0, q / uGW).rgb;
-  if (uDL == (up ? 1.0 : 0.0) && all(greaterThanEqual(qd, vec2(0.0))) && all(lessThan(qd, vec2(1.0)))) L += texture(uLMD, qd).rgb;
+  // live lights (flashes, faulty lamps) exist only in the 24 m window round you: fade them out over its outer 3 m, else their
+  // light stopped dead along the window's border - a faint straight edge out in the distance that moved with you
+  if (uDL == (up ? 1.0 : 0.0) && all(greaterThanEqual(qd, vec2(0.0))) && all(lessThan(qd, vec2(1.0)))) {
+    vec2 e = min(qd, 1.0 - qd) * uRD.zw; L += texture(uLMD, qd).rgb * smoothstep(0.0, 3.0, min(e.x, e.y)); }
   return L * 4.0;
 }
 void main(){
@@ -698,7 +701,11 @@ function buildDeckMesh(L) {   // floor + ceiling per cell, a wall face on every 
     const base = !r ? [.24, .25, .27] : r === L.exit ? [.38, .27, .26] : r.id ? [.33, .33, .35] : [.3, .34, .37];
     const edge = N8.some(([di, dj]) => cellAt(i + di, j + dj) === PIT);   // hazard checker round the pits
     const tile = edge ? ((i + j) & 1 ? [.7, .55, .08] : [.08, .08, .08]) : mul(base, .88 + .14 * h + ((i + j) & 1) * .05);
-    if (f & 1) { const H = (x, z) => [x, rampH(x, z, j * GW + i), z]; q4(H(i, j), H(i + 1, j), H(i + 1, j + 1), H(i, j + 1), [0, 1, 0], mul(tile, 1.1)); }
+    // ramp: its true slope normal (it had a flat [0,1,0]: wherever the slope rose above your eye that normal faced away from
+    // you, the shader flipped it to face down and the lamps' diffuse dropped out - a hard dark step across the ramp at eye
+    // height), and one even tone (the floor's per-cell checker / hash read as more light steps on a slope)
+    if (f & 1) { const H = (x, z) => [x, rampH(x, z, j * GW + i), z], q = L.talls[L.tallOf[L.roomOf[j * GW + i]]];
+      q4(H(i, j), H(i + 1, j), H(i + 1, j + 1), H(i, j + 1), norm([-q.u[0] * HI / q.len, 1, -q.u[1] * HI / q.len]), mul(base, .96)); }
     else quad([i, 0, j], [1, 0, 0], [0, 0, 1], [0, 1, 0], tile);
     for (const [di, dj] of N4) {   // walls: up to this cell's ceiling from the neighbour's (0 for rock: lintels over doorways)
       const nc = cellAt(i + di, j + dj), lo = nc === SOLID ? 0 : ceilAt(i + di, j + dj); if (lo >= hc) continue;
@@ -758,7 +765,7 @@ function buildDeckMesh(L) {   // floor + ceiling per cell, a wall face on every 
       }
     }
     if (f & 2) {   // the deck slab: walkable top at HI, dark underside 25 cm lower
-      quad([i, HI, j], [1, 0, 0], [0, 0, 1], [0, 1, 0], mul(tile, .95));
+      quad([i, HI, j], [1, 0, 0], [0, 0, 1], [0, 1, 0], tile);
       quad([i, HI - .25, j], [1, 0, 0], [0, 0, 1], [0, -1, 0], [.14, .15, .17]);
     }
   }
@@ -989,7 +996,8 @@ function raycast(o, d, maxT = 200, skip = null) {  // -> {t, target}
   let best = {t: rayWorld(o, d, maxT), target: null};
   for (const tg of hittables()) {
     if (tg.dead || (skip && skip.has(tg))) continue;
-    const t = tg.lb ? rayBox(M.pt(tg.iw, o), M.dir(tg.iw, d), tg.lb) : rayBox(o, d, boxOf(tg));   // corpses: a box turned with the body
+    const iw = tg.lb ? tg.iw : tg.pb && M.mul(M.R(1, -tg.yaw), M.T(-tg.pos[0], -tg.pos[1], -tg.pos[2]));   // corpses / live rigs: a box turned with the body
+    const t = iw ? rayBox(M.pt(iw, o), M.dir(iw, d), tg.lb || tg.pb) : rayBox(o, d, boxOf(tg));
     if (t !== null && t < best.t) best = {t, target: tg};
   }
   return best;
@@ -1521,6 +1529,10 @@ function spawnMon(r, T) {   // on a free floor cell of the room, > 6 m from the 
     if (c === 'Out_Of_Ground') { addDecal(x, z, 1.5, [.05, .045, .04], gy); sparks([x, gy + .05, z], 10, [.75, .7, .6], 2.5);   // the floor breaks open
       for (let i = 0; i < 6; i++) spawn({pos: [x + rand(-.5, .5), gy + .1, z + rand(-.5, .5)], vel: [rand(-.6, .6), rand(.6, 1.6), rand(-.6, .6)], life: rand(1, 1.8), kind: 3, w0: .3, w1: 1.3, tint: [.42, .4, .38], drag: 1.5, er0: .1, er1: 1}); }
     else for (let i = 0; i < 8; i++) spawn({pos: [x + rand(-.6, .6), top - .05, z + rand(-.6, .6)], vel: [0, rand(-1.2, -.3), 0], grav: -4, life: rand(.6, 1.2), kind: 3, w0: .12, w1: .5, tint: [.45, .43, .4], drag: 1, er0: .1, er1: 1});   // dust from the ceiling
+    // the same purple flash as every other monster (it was missing: the dust alone did not read as "something appeared"),
+    // where the crawler first shows: on the floor, or up under the ceiling where it hangs
+    const fy = c === 'Out_Of_Ground' ? gy + .3 : Math.min(top, gy + 2.75 + m.intro.dy) - .45;
+    spawn({pos: [x, fy, z], life: .6, kind: 5, w0: .3, w1: 2.2, tint: [.8, .25, 1]}); spawn({pos: [x, fy + .2, z], life: .45, kind: 0, w0: 2.2, tint: [.7, .2, 1]});
     return; }
   // the purple flash: at the feet for walkers; a flyer (bat) appears where it hovers (it used to flash on the floor under it)
   const fy = T.fly ? gy + T.fly + (T.y0 || 0) + T.h * .5 : 0;
@@ -1660,13 +1672,13 @@ function hurtPlayer(d) {   // one blow: red flash + a jolt of the view
 }
 function separate() {   // hard bodies after everyone moved: no two monsters overlap and you can't walk through them.
   // 4 relaxation passes; the bigger one moves less, one already striking holds its spot; then each moved body is wall-checked
-  const B = mons.map(m => ({m, p: [m.pos[0], 0, m.pos[2]], r: m.T.r, gy: m.gy, fly: !!m.T.fly, im: (m.inR ? .15 : 1) / (m.T.r * m.T.r), mv: 0}));
+  const B = mons.map(m => ({m, p: [m.pos[0], 0, m.pos[2]], r: m.T.r, f: Math.max(m.T.r, m.T.front || 0), gy: m.gy, fly: !!m.T.fly, im: (m.inR ? .15 : 1) / (m.T.r * m.T.r), mv: 0}));
   if (!PL.dead) B.push({p: [EYE[0], 0, EYE[2]], r: .35, gy: PL.gy, pl: 1, mv: 0});
-  for (const t of TARGETS) B.push({p: [t.pos[0], 0, t.pos[2]], r: .4, gy: t.pos[1], fly: false, fix: 1, mv: 0});   // shooting dummies: solid, never move
+  for (const t of TARGETS) B.push({p: [t.pos[0], 0, t.pos[2]], r: .4, f: .4, gy: t.pos[1], fly: false, fix: 1, mv: 0});   // shooting dummies: solid, never move
   for (let it = 0; it < 4; it++) for (let a = 0; a < B.length; a++) for (let b = a + 1; b < B.length; b++) {
     const A = B[a], O = B[b];
     if ((A.fly !== O.fly && !A.pl && !O.pl) || Math.abs(A.gy - O.gy) > 1) continue;   // bats only bump bats (and you)
-    let dx = A.p[0] - O.p[0], dz = A.p[2] - O.p[2], l = Math.hypot(dx, dz); const R = A.r + O.r;
+    let dx = A.p[0] - O.p[0], dz = A.p[2] - O.p[2], l = Math.hypot(dx, dz); const R = A.pl ? A.r + O.f : O.pl ? O.r + A.f : A.r + O.r;   // you vs it: its front reach (T.front)
     if (l >= R) continue;
     if (l < 1e-4) { dx = Math.random() - .5; dz = Math.random() - .5; l = Math.hypot(dx, dz); }
     if (A.fix && O.fix) continue;
@@ -1705,7 +1717,7 @@ function updateHorde(dt) {
     const fly = !!m.T.fly, to = sub(me, m.pos), dist = Math.hypot(to[0], to[2]); to[1] = 0;
     // reach with hysteresis: it stops ~0.8 m out (claws short of your face) and keeps striking until you are 0.35 m further;
     // without the gap it toggled walk / attack every frame at the edge (the flicker)
-    const reach = m.T.r + .8, near = Math.abs(m.gy - PL.gy) < 1.2;
+    const reach = Math.max(m.T.r + .8, (m.T.front || 0) + .55), near = Math.abs(m.gy - PL.gy) < 1.2;   // T.front: a long body (crawler, spider) stops by its head
     m.inR = near && dist < reach + (m.inR ? .35 : 0);   // also while you lie dead: they stay put over you instead of milling about (no !PL.dead here: it made them flicker)
     let v = [0, 0, 0];
     if (!m.inR) {   // straight at you when the way is clear, else follow the path field
@@ -2012,6 +2024,13 @@ function rigPose(m, R, d) {   // FK + FABRIK -> skin matrices in R.buf, returns 
 function drawRig(m, base, ct, glow) {   // ct: seconds dead (-1 alive). A corpse lies in its death pose, then sinks after 8 s
   const T = m.T, R = T.rig, dl = m.dc && CRAWL ? CRAWL.clips[m.dc].len : 0;   // a crawler plays its death clip at its own length
   const {pts, fall, lie} = rigPose(m, R, ct < 0 ? 0 : dl ? clamp(ct / dl, 0, 1) : ease(ct, 0, R.kind === 'troll' ? .9 : .6));   // the troll's fall takes a little longer
+  if (ct < 0) {   // alive: "posed hit box" round the skeleton as drawn (body frame) + T.front, the farthest the body reaches ahead
+    // (the r / h box missed what you see up close: a crawler's head 1.3 m ahead of its 0.5 m box, spider legs, swung arms;
+    // spacing by r alone let that head end up behind the camera - you saw through the monster and the shots flew past it)
+    const k = T.scale, lo = [0, 1, 2].map(i => Math.min(...pts.map(p => p[i])) * k - .05), hi = [0, 1, 2].map(i => Math.max(...pts.map(p => p[i])) * k + .05), y = T.y0 || 0;
+    m.pb = {min: [Math.min(lo[0], -T.r), Math.min(lo[1], y), Math.min(lo[2], -T.r)], max: [Math.max(hi[0], T.r), Math.max(hi[1], y + T.h), Math.max(hi[2], T.r)]};
+    if (!m.intro) T.front = Math.max(T.front || T.r, hi[2]);
+  }
   let mm = M.mul(base, M.S(T.scale, T.scale, T.scale));
   if (fall) { mm = M.mul(mm, fall); const lo = Math.min(...pts.map(p => M.pt(mm, p)[1])); mm = M.mul(M.T(0, (lie ?? T.r * .3) + base[13] - lo - Math.max(0, ct - 8) * .5, 0), mm); }   // lies on its own floor
   else if (ct > 8) mm = M.mul(M.T(0, -(ct - 8) * .5, 0), mm);   // clip-driven deaths (crawler) lie as the clip left them: sink the same way
@@ -2490,6 +2509,12 @@ function frame(now) {
   PL.vy -= 16 * dt; PL.jy = Math.max(0, PL.jy + PL.vy * dt); if (!PL.jy) { if (PL.vy < -1) playSound(SND('snd_land'), Math.min(.8, .35 - PL.vy * .06)); PL.vy = 0; }          // jump arc
   PL.eye = mix(PL.eye, PL.crouch ? 1 : 1.62, 1 - Math.exp(-12 * dt));                        // crouch: eye 1.0 m, half speed
   if (!PL.dead && !PL.jy && cellAt(Math.floor(EYE[0]), Math.floor(EYE[2])) === PIT) { PL.fell = 1; hurtPlayer(PL.hp); }   // stepped into a pit (a jump clears it)
+  if (PL.fell && PL.dead) {   // "falling: off the shaft walls": you drop in at the lip, eye ~0 m from the shaft wall - inside the 0.1 m near
+    // plane, so turning the camera cut through it (saw through walls). Ease to >= 0.3 m off every wall of the shaft (pit neighbours are open)
+    const i = Math.floor(EYE[0]), j = Math.floor(EYE[2]), k = 1 - Math.exp(-20 * dt), o = (a, b) => cellAt(a, b) === PIT;
+    EYE[0] += (clamp(EYE[0], o(i - 1, j) ? i : i + .3, o(i + 1, j) ? i + 1 : i + .7) - EYE[0]) * k;
+    EYE[2] += (clamp(EYE[2], o(i, j - 1) ? j : j + .3, o(i, j + 1) ? j + 1 : j + .7) - EYE[2]) * k;
+  }
   const dk = PL.dead ? ease(3 - PL.dead, 0, .9) : 0, ft = 3 - PL.dead;                        // death: drop to the floor and roll over
   EYE[1] = PL.fell && PL.dead ? Math.max(-3.8, PL.eye - 4.9 * ft * ft) : PL.gy + mix(PL.eye + PL.jy, .3, dk);
   G.punch *= Math.exp(-10 * dt);

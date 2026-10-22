@@ -107,6 +107,12 @@ addEventListener("pageshow", function(){ pauseOff(); });          /* bfcache res
 </script>
 <script>
 'use strict';
+/* PITFALLS ALREADY HIT (each is commented where it lives; search the quoted words before changing that code):
+   - paths: "64-bit" flow costs, "Route commitment" / PATH_STICK (dodging behind cover), "no cutting a corner over a drop", "ledge"
+   - monsters: reach hysteresis "flicker", "cd set here", "hard bodies" (separate: wall re-check, dummies), heads "tracks you"
+   - level mesh: "mitred" bevels, "END CAPS" (door z-fight, theme colour), "reactor cells", door "light bar" width, "ramp side" (white theme), deck edge "over a doorway", "amber stripes" on lintels
+   - corpses: "corpseBox" (fitted to the death pose), "every corpse must sink" (shootable 0.4-8 s), "clip-driven deaths"
+   - crawler: entrance choice "mid-air", "dl" death clip length; bat: spawn flash "where it hovers", death "o.lie" (falls from its hover height); weapons: "hingeSplit"; sound: "not 'S'", focus block (no strict) */
 /* ============================================================ 0. sound (sound2.js: playSound / setMusic; sounds/ from the Bloodworks
    sources). Without sound2.js the game stays silent. The game only calls the helpers below. */
 if (!window.playSound) { window.playSound = () => ({stop() {}}); window.setMusic = () => {}; }
@@ -120,7 +126,8 @@ const WSND = {   // per weapon: [shot sound, volume]; LOOP weapons hold one loop
   rocket_minigun: ['snd_rocket', .55], pulse_gun: ['snd_pulse', .3], ion_rifle: ['snd_laser_pistol', .85], ion_minigun: ['snd_laser_mg', 1.8],
   ion_shotgun: ['snd_laser', .5], ion_cannon: ['snd_ion_cannon', .8], splitter_gun: ['snd_split', .8]};
 const LOOP = {mean_minigun: ['snd_minigun', .5, 'snd_minigun_start', 'snd_minigun_end'], flamethrower: ['snd_flame', .55], blow_torch: ['snd_flame', .4]};
-const SND = n => window[n];   // sound object by name (sound2.js preloads them as window.snd_*)
+const SND = n => window[n];   // sound object by name (sound2.js preloads them as window.snd_*). NB: not 'S' - S is the sector size
+// Sounds are always fetched by name through SND('snd_x'): a bare snd_x is a ReferenceError under 'use strict' when sound2.js is missing.
 function gunLoop(on) {   // continuous weapons: start the loop when the trigger goes down, stop it (+ spin-down) when it comes up
   const L = on && W && LOOP[W.slug];
   if (L && !G.loop) { G.loop = playSound(SND(L[0]), L[1], false, true); G.loopL = L; if (L[2]) playSound(SND(L[2]), .5); }
@@ -261,6 +268,17 @@ fieldImg.onload = () => texture(4, null, 0, fieldImg);
 fieldImg.src = 'data:image/jpeg;base64,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';
 
 /* ============================================================ 2. shaders */
+/* ---- level theme (hardcoded): 0 gray metal, 1 white plastic. Same deck, same everything; the plastic theme turns the level's
+   grays into shades of white (tinted ones keep their tint; yellow / black hazard, amber stripes, lamps, crates stay) and gives
+   the level a cheap fake reflection: the reflected view ray looks up a procedural "room" (sky gradient + ceiling-light bands),
+   no extra pass, so it costs a few ALU ops on old phones. Gray metal gets a faint one. */
+const THEME = 1;
+const THEME_REFL = [.14, .32][THEME], THEME_FILL = [0, .2][THEME];   // fake reflection strength; fill light (white rooms bounce light around)
+const PAL = c => {   // a level colour for this theme
+  if (!THEME || Math.max(...c) - Math.min(...c) > .13) return c;
+  const l = (c[0] + c[1] + c[2]) / 3, v = l < .13 ? l * 2 : .5 + l * 1.05;
+  return c.map(x => clamp(v + (x - l), 0, 1));
+};
 function program(vs, fs) {
   const p = gl.createProgram();
   for (const [t, src] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]]) {
@@ -284,7 +302,7 @@ void main(){
   vec4 w = uM * S * vec4(aP, 1.0); vW = w.xyz; vN = mat3(uM) * mat3(S) * aN; vC = aC; vM = aM; vT = aT; gl_Position = uVP * w; }`,
 `#version 300 es
 precision highp float;
-in vec3 vW, vN, vC, vM; in vec2 vT; uniform vec3 uEye, uAdd; uniform float uEmit, uFog; uniform bool uTexOn, uNrmOn; uniform sampler2D uTex, uNrm; out vec4 o;
+in vec3 vW, vN, vC, vM; in vec2 vT; uniform vec3 uEye, uAdd; uniform float uEmit, uFog, uRefl, uFill; uniform bool uTexOn, uNrmOn; uniform sampler2D uTex, uNrm; out vec4 o;
 uniform bool uRT; uniform sampler2D uLM0, uLM1, uLMD; uniform vec4 uR1[2], uRD; uniform float uDL, uGW, uHI;   // RT_LIGHTS
 vec3 rtLight(vec3 p, vec3 n) {   // RT_LIGHTS: this floor's lightmap (+ the live window if you are on that floor), x4 (stored / 4)
   vec2 q = p.xz + n.xz * 0.12, qd = (q - uRD.xy) / uRD.zw;   // walls sample 12 cm into the room
@@ -318,6 +336,7 @@ void main(){
   vec3 col = C * lit * (1.0 - metal * 0.7);
   col += env * mix(C * 1.1, vec3(1.0), fres * 0.6) * metal * rk;
   col += pow(max(dot(n, normalize(L + v)), 0.0), 8.0 + gloss * 160.0) * (0.15 + metal * 0.9) * rk;
+  col += env * uRefl * (0.3 + 0.7 * fres) * rk + C * uFill;   // the level theme: fake reflection + bounce fill (both 0 on everything else)
   col = mix(col, C * (1.1 + uEmit * 1.6), vM.y) + uAdd;
   o = vec4(mix(col, vec3(0.07, 0.075, 0.09), 1.0 - exp(-length(uEye - vW) * uFog)), 1.0);
 }`);
@@ -617,7 +636,8 @@ function generate(seed) {
     if (lay[k] & 2) lamps.push({...L0, p: [x + .5, HI - .28, z + .5], bad: bad()});   // under the deck
     lamps.push({...L0, p: [x + .5, H2 - .03, z + .5], lay: 1, bad: bad()});          // high ceiling: lights the deck (and the floor where open)
   }
-  for (const l of lamps) { const [x, y, z] = l.p; Object.assign(l, {lamp: 1, c: l.p, box: {min: [x - .7, y - .06, z - .18], max: [x + .7, y + .06, z + .18]}}); }   // shootable
+  // shootable. Boxes by explicit arithmetic: inside generate() 'add' is a local (a room adder) that shadows the vector add
+  for (const l of lamps) { const [x, y, z] = l.p; Object.assign(l, {lamp: 1, c: l.p, box: {min: [x - .7, y - .06, z - .18], max: [x + .7, y + .06, z + .18]}}); }
   // 7b. red gas tanks on the walls, rare (rooms get 0,0,0,1,2 at random: ~3 per 5 rooms), never by a doorway; on a deck wall too
   const tanks = [];
   for (const r of rooms) for (let tries = 0, n = [0, 0, 0, 1, 2][Math.floor(R() * 5)]; n && tries < 200; tries++) {
@@ -659,12 +679,12 @@ function validate(L) {   // self-check: all reachable, doors flush in a wall, ro
   return err;
 }
 function buildDeckMesh(L) {   // floor + ceiling per cell, a wall face on every edge between open and SOLID
-  const d = [], q4 = (a, b, c, e, n, col, m = [0, 0, .25]) => { for (const P of [a, b, c, a, c, e]) d.push(...P, ...n, ...col, ...m); };
+  const d = [], q4 = (a, b, c, e, n, col, m = [0, 0, THEME ? .6 : .25]) => { col = PAL(col); for (const P of [a, b, c, a, c, e]) d.push(...P, ...n, ...col, ...m); };   // plastic: glossier
   const quad = (p, u, v, n, col, m) => q4(p, add(p, u), add(add(p, u), v), add(p, v), n, col, m);
   const rock = (a, b) => cellAt(a, b) === SOLID && L.lay[b * GW + a] !== 4;   // rock / pillar (the reactor is not a wall)
   for (let j = 0; j < GW; j++) for (let i = 0; i < GW; i++) {
     const c = L.grid[j * GW + i];
-    if (c === SOLID) { if (L.lay[j * GW + i] === 4) { quad([i, 0, j], [1, 0, 0], [0, 0, 1], [0, 1, 0], [.2, .21, .23]); quad([i, H2, j], [1, 0, 0], [0, 0, 1], [0, -1, 0], [.16, .17, .19]); } continue; }   // reactor cells: floor + roof round the octagon
+    if (c === SOLID) { if (L.lay[j * GW + i] === 4) { quad([i, 0, j], [1, 0, 0], [0, 0, 1], [0, 1, 0], [.2, .21, .23]); quad([i, H2, j], [1, 0, 0], [0, 0, 1], [0, -1, 0], [.16, .17, .19]); } continue; }   // reactor cells (SOLID, lay 4): they get no wall, but need a floor + roof round the octagon (else a 3x3 hole in the roof)
     const r = L.rooms[L.roomOf[j * GW + i]], h = hash2(i, j, 7), hc = ceilAt(i, j), f = L.lay[j * GW + i];
     quad([i, hc, j], [1, 0, 0], [0, 0, 1], [0, -1, 0], [.16, .17, .19]);
     if (c === PIT) {   // a dark shaft: bottom glows faintly, walls go down, a hazard band at the lip
@@ -700,11 +720,21 @@ function buildDeckMesh(L) {   // floor + ceiling per cell, a wall face on every 
       quad(add(a, up(skirt ? SK : lo)), u, up((cham ? hc - CH : hc) - (skirt ? SK : lo)), n, wc);
       if (cham) { const ea = miter(-1, hc), eb = miter(1, hc);
         q4(add(a, up(hc - CH)), add(b, up(hc - CH)), madd(madd(add(b, up(hc)), n, CH), u, CH * eb), madd(madd(add(a, up(hc)), n, CH), u, -CH * ea), norm(sub(n, [0, 1, 0])), mul(wc, .75));
-        for (const [sg, e, E] of [[-1, ea, a], [1, eb, b]]) {   // a straight end the strip does not continue past (doorway under a taller lintel): close it
+        // END CAPS (two-floor rooms only, in practice). A chamfer that ends straight where the strip does not go on - a doorway
+        // cell (ceiling 3.5) next to a two-floor room (7.5) - left its triangular cross-section open: a see-through hole at the
+        // door's top corners. Each such end gets the triangle. Three lessons learnt here, keep them:
+        //  - it lies on the plane of the shut door's face: placed exactly there it z-fought the door, so it sits 1 cm off it,
+        //    on the side away from the door box (in front of the door seen from the tall room: it then cuts the door's top
+        //    corners at 45 deg like the wall bevel does in ordinary rooms; the door light bar is 1.8 wide to fit between them);
+        //  - it must go through q4 (so PAL tints it with the theme) in the chamfer's colour, with the chamfer's normal so it
+        //    shades the same; a raw d.push in its own darker colour showed as dark triangles (worst in the white theme).
+        for (const [sg, e, E] of [[-1, ea, a], [1, eb, b]]) {
           const ci = i + st[0] * sg, cj = j + st[1] * sg;
-          if (!e && !(ceilAt(ci, cj) === hc && wallY(ci + di, cj + dj, hc))) { const E1 = madd(E, u, (c === DOOR ? 1 : -1) * sg * .01), P = add(E1, up(hc)), w = mul(u, sg), t = [add(E1, up(hc - CH)), P, madd(P, n, CH)];   // 1 cm clear of the shut door's face (it lies on that plane): in front of it, so the door shows the 45 deg corners
-            for (const V of t) d.push(...V, ...w, ...mul(wc, .6), 0, 0, .25); } } }
-      if (nc === SOLID) for (const y of hc > HI + 1.5 ? [1.1, HI + 1.1] : [1.1]) quad(madd([p[0], y, p[2]], n, .01), u, [0, .2, 0], n, [.55, .45, .1]);   // amber stripe
+          if (!e && !(ceilAt(ci, cj) === hc && wallY(ci + di, cj + dj, hc))) { const E1 = madd(E, u, (c === DOOR ? 1 : -1) * sg * .01), P = add(E1, up(hc));
+            q4(add(E1, up(hc - CH)), P, madd(P, n, CH), madd(P, n, CH), norm(sub(n, [0, 1, 0])), mul(wc, .75)); } } }
+      // amber stripes on every wall face that spans their height - rock walls and the lintels over doorways (else a gap in the
+      // upper stripe of a two-floor room above each door)
+      for (const y of hc > HI + 1.5 ? [1.1, HI + 1.1] : [1.1]) if (y >= lo && y + .2 <= hc) quad(madd([p[0], y, p[2]], n, .01), u, [0, .2, 0], n, [.55, .45, .1]);
     }
     for (const [di, dj] of N4) {   // ramp sides, deck slab edges, and railings wherever you could otherwise walk off
       const ni = i + di, nj = j + dj, nf = cellAt(ni, nj) === SOLID ? -1 : L.lay[nj * GW + ni];
@@ -713,11 +743,17 @@ function buildDeckMesh(L) {   // floor + ceiling per cell, a wall face on every 
       const rail = (y0, y1) => { for (const y of [.5, 1]) q4([e0[0], y0 + y - .04, e0[1]], [e1[0], y1 + y - .04, e1[1]], [e1[0], y1 + y + .04, e1[1]], [e0[0], y0 + y + .04, e0[1]], n, [.62, .55, .18], [.7, 0, .5]); };
       if ((f & 1) && !(nf & 1)) {
         const h0 = rampH(e0[0], e0[1], j * GW + i), h1 = rampH(e1[0], e1[1], j * GW + i);
-        q4([e0[0], 0, e0[1]], [e1[0], 0, e1[1]], [e1[0], h1, e1[1]], [e0[0], h0, e0[1]], n, [.22, .23, .26]);
+        // ramp side: dark in the white theme + a hazard trim along its top edge. In white it took the wall's colour, so seen
+        // side-on it hid the wall's stripe and the rails seemed to float in front of a "broken" wall
+        q4([e0[0], 0, e0[1]], [e1[0], 0, e1[1]], [e1[0], h1, e1[1]], [e0[0], h0, e0[1]], n, THEME ? [.12, .12, .13] : [.22, .23, .26]);
+        const T = (x, z, y) => [x + n[0] * .01, y, z + n[2] * .01];   // the trim floats 1 cm off the side face (on it, it z-fought)
+        q4(T(e0[0], e0[1], h0 - .09), T(e1[0], e1[1], h1 - .09), T(e1[0], e1[1], h1 + .005), T(e0[0], e0[1], h0 + .005), n, [.75, .6, .1]);
         if (!(nf & 2) && Math.max(h0, h1) > .4) rail(h0, h1);
       }
-      if ((f & 2) && !(nf & 2) && !(nf & 1)) {
-        q4([e0[0], HI - .25, e0[1]], [e1[0], HI - .25, e1[1]], [e1[0], HI, e1[1]], [e0[0], HI, e0[1]], n, [.2, .21, .24]);
+      // deck edge + rail only where you could walk off it: not over a doorway (the door cell's ceiling is below the deck, a
+      // lintel stands there) - that drew a slab edge and two rails across the upper wall, the "panel" breaking its stripe
+      if ((f & 2) && !(nf & 2) && !(nf & 1) && ceilAt(ni, nj) > HI) {
+        q4([e0[0], HI - .25, e0[1]], [e1[0], HI - .25, e1[1]], [e1[0], HI, e1[1]], [e0[0], HI, e0[1]], n, THEME ? [.12, .12, .13] : [.2, .21, .24]);   // deck edge (dark: see ramp side)
         rail(HI, HI);
       }
     }
@@ -740,14 +776,14 @@ function buildDeckMesh(L) {   // floor + ceiling per cell, a wall face on every 
   }
   return meshVAO(d);
 }
-const doorMesh = (() => { const d = []; pushBox(d, [0, .5, 0], [1, 1, 1], [.22, .24, .27], [.6, 0, .5]); pushBox(d, [0, .55, 0], [1.02, .04, .96], [.9, .9, .9], [0, 1, 0]); return meshVAO(d); })();
+const doorMesh = (() => { const d = []; pushBox(d, [0, .5, 0], [1, 1, 1], PAL([.22, .24, .27]), THEME ? [.1, 0, .6] : [.6, 0, .5]); pushBox(d, [0, .55, 0], [1.02, .04, .96], [.9, .9, .9], [0, 1, 0]); return meshVAO(d); })();
 const crateMesh = (() => { const d = []; pushBox(d, [0, .45, 0], [.96, .9, .96], [.36, .3, .18]); pushBox(d, [0, .62, 0], [.98, .1, .98], [.6, .2, .12]); return meshVAO(d); })();
 function drawDeck() {
-  drawMesh(LV.mesh, M.id());
+  gl.uniform1f(MESH.u.uRefl, THEME_REFL); gl.uniform1f(MESH.u.uFill, THEME_FILL); drawMesh(LV.mesh, M.id()); gl.uniform1f(MESH.u.uRefl, 0); gl.uniform1f(MESH.u.uFill, 0);
   for (const d of LV.doors) {   // a shut door glows red; the frame light over each doorway: green open / red locked
     const sx = d.hor ? 1 : 3, sz = d.hor ? 3 : 1, red = d.shut ? [.5, .03, .02] : Z3;
     if (d.open < 1) drawMesh(doorMesh, M.chain(M.T(d.c[0], -d.open * WALL_H, d.c[1]), M.S(sx, WALL_H, sz)), red);
-    drawMesh(cube, M.chain(M.T(d.c[0], WALL_H - .07, d.c[1]), M.S(d.hor ? 1.02 : 1.8, .12, d.hor ? 1.8 : 1.02)), d.shut ? [.9, .05, .02] : [.05, .7, .2], 1);   // light bar: fits between the 45 deg corners
+    drawMesh(cube, M.chain(M.T(d.c[0], WALL_H - .07, d.c[1]), M.S(d.hor ? 1.02 : 1.8, .12, d.hor ? 1.8 : 1.02)), d.shut ? [.9, .05, .02] : [.05, .7, .2], 1);   // light bar: 1.8 wide, between the 45 deg corners (3 wide stuck out over them in two-floor rooms)
   }
   for (const c of LV.crates) if (!c.dead) drawMesh(crateMesh, M.T(c.i + .5, 0, c.j + .5), mul([1, .7, .4], c.flash * .5));
   for (const t of LV.tanks) drawMesh(t.st === 2 ? tankScorch : tankMesh, M.chain(M.T(...t.p), M.R(1, Math.atan2(t.n[0], t.n[1]))), t.st === 1 && t.t < 3 ? [.5 + .3 * Math.random(), .18, 0] : t.st === 1 ? [.25, .08, 0] : Z3);   // gas tanks (leaking: glows)
@@ -763,7 +799,7 @@ const medMesh = (() => { const d = []; pushBox(d, [0, 0, 0], [.75, .55, .12], [.
   pushBox(d, [0, 0, .065], [.36, .1, .02], [1, .1, .08], [0, 1, 0]); pushBox(d, [0, 0, .065], [.1, .36, .02], [1, .1, .08], [0, 1, 0]); return meshVAO(d); })();
 /* gas tanks: 1st hit -> the valve goes, a flame jet sprays out of the wall for 3 s (burns monsters and you); 2nd hit (0.25 s later
    or more), any blast, or 5 s left alone -> it explodes (3 m, hurts you), and the blast sets off other tanks */
-function tankHit(t, boom) {
+function tankHit(t, boom) {   // a 2nd hit counts only 0.25 s after the 1st: one shotgun volley (8 pellets, 1 frame) just breaks the valve
   if (t.st >= 2) return;
   if (boom || (t.st === 1 && t.t > .25)) { t.st = 3; t.fuse = boom ? .12 : 0; return; }   // a blast: a short fuse, so chains ripple
   if (t.st === 0) { t.st = 1; t.t = 0; sparks(t.c, 14, [1, .8, .4], 4); sndAt(SND('snd_glass1'), .5, t.c);
@@ -947,6 +983,7 @@ function rayBox(o, d, b) {
 const y0 = t => t.pos[1] + (t.T.y0 || 0);   // flyers hover: their box hangs around pos[1]
 const boxOf = t => t.box || (t.T ? {min: [t.pos[0] - t.T.r, y0(t), t.pos[2] - t.T.r], max: [t.pos[0] + t.T.r, y0(t) + t.T.h, t.pos[2] + t.T.r]} : tBox(t));
 const centerOf = t => t.c || (t.T ? [t.pos[0], y0(t) + t.T.h * .6, t.pos[2]] : tCenter(t));
+// corpses are shootable from 0.4 s (fallen) to 8 s, when they start to sink (drawRig) - every corpse must sink then, or it lies there unshootable
 const hittables = () => TARGETS.concat(mons, LV.crates, LV.lamps, LV.tanks.filter(t => t.st < 2), corpses.filter(c => !c.pit && c.t > .4 && c.t < 8));   // dummies + live monsters + crates + lamps + gas tanks + lying corpses
 function raycast(o, d, maxT = 200, skip = null) {  // -> {t, target}
   let best = {t: rayWorld(o, d, maxT), target: null};
@@ -1040,6 +1077,7 @@ function parseMTL(text, into) {
   }
 }
 function hingeSplit(groups, V) {  // break-action: welded pieces lying wholly ahead of the barrel's hinge (coils, rails) ride with the barrel
+  // (the Gauss Shotgun OBJ has only 'barrel' + 'body', its coils and rail are inside 'body': moving whole parts left them behind)
   const B = groups.barrel, P = {}; if (!B) return;
   const hx = Math.min(...B.flatMap(f => [0, 1, 2].map(k => V[f[k]][0]))) - .002, key = i => V[i].map(v => Math.round(v * 2e4)).join(',');
   const find = k => { let r = k; while (P[r] !== undefined && P[r] !== r) r = P[r]; return P[k] = r; };
@@ -1446,7 +1484,7 @@ const TIER = ['pistol', 'assault_rifle', 'shotgun', 'sawed_off_shotgun', 'submac
   'rocket_minigun', 'pulse_gun', 'jackhammer', 'ion_rifle', 'ion_minigun', 'ion_cannon', 'plasma_cannon', 'splitter_gun', 'gauss_shotgun', 'ion_shotgun'];
 function dropWeapon() {   // a loaded weapon from this level's band, never the one in your hands (picking one up switches to it)
   const x = Math.random(), cap = PL.lvl + (x < .02 ? 8 : x < .08 ? 4 : x < .2 ? 2 : 0), of = slugs => Object.keys(weapons).filter(k => slugs.includes(weapons[k].slug) && k !== (W && W.base));
-  const top = clamp(cap, 4, TIER.length), band = of(TIER.slice(top - 4, top)), any = band.length ? band : of(TIER.slice(0, top));   // >= 4 tiers wide
+  const top = clamp(cap, 4, TIER.length), band = of(TIER.slice(top - 4, top)), any = band.length ? band : of(TIER.slice(0, top));   // >= 4 tiers wide (a narrower band was empty at level 1: no drops)
   return any[Math.floor(Math.random() * any.length)];
 }
 const BONUS_P = 1 / 9, MEDIKIT_P = 10 / 162, MEDIKIT_HP = 10;   // Crimsonland: a bonus on 1 kill in 9; MediKit = 10 of the 162 type rolls; +10 HP
@@ -1472,13 +1510,22 @@ function spawnMon(r, T) {   // on a free floor cell of the room, > 6 m from the 
     for (const y of LV.lay[j * GW + i] & 2 ? [0, HI] : [0]) (Math.hypot(i + .5 - EYE[0], j + .5 - EYE[2], y - PL.gy) > 6 ? far : c).push([i + .5, j + .5, y]);
   const pool = far.length ? far : c, [x, z, gy] = pool[Math.floor(Math.random() * pool.length)];
   mons.push({T, pos: [x, gy + (T.fly || 0), z], yaw: 0, hp: T.hp * (1 + r.depth * .15), phase: rand(0, 6),
-    kb: [0, 0, 0], flash: 0, burn: 0, atk: 0, atkT: 0, cd: .35, gy, off: rand(-1, 1), speed: T.speed * rand(.85, 1.15)});
+    kb: [0, 0, 0], flash: 0, burn: 0, atk: 0, atkT: 0, cd: .35, gy, off: rand(-1, 1), speed: T.speed * rand(.85, 1.15)});   // cd set here: one spawned in reach got NaN and never hit
   const m = mons[mons.length - 1]; m.cs = Math.floor(Math.random() * 3);
-  if (T.anim && CRAWL && T.rig) { const c = Math.random() < .5 ? 'Out_Of_Ground' : 'Jump_From_The_Ceiling';   // crawls out of the floor or drops from the ceiling
-    const k = Math.floor(z) * GW + Math.floor(x), top = !gy && LV.lay[k] & 2 ? HI - .25 : ceilAt(Math.floor(x), Math.floor(z));   // under a deck: its slab
-    m.intro = {c, t0: clock, dy: c === 'Out_Of_Ground' ? 0 : clamp(top - gy - 2.75, 0, 1.5)}; return; }
-  spawn({pos: [x, gy + .15, z], life: .6, kind: 5, w0: .3, w1: 2.4, tint: [.8, .25, 1]});
-  spawn({pos: [x, gy + 1, z], life: .4, kind: 0, w0: 2.4, tint: [.7, .2, 1]});
+  if (T.anim && CRAWL && T.rig) {   // crawls out of the floor or drops from the ceiling
+    const k = Math.floor(z) * GW + Math.floor(x), top = !gy && LV.lay[k] & 2 ? HI - .25 : ceilAt(Math.floor(x), Math.floor(z)), dy = top - gy - 2.75;   // under a deck: its slab
+    // the drop needs a ceiling in reach (not the 7.5 m one of an open two-floor room); a deck slab is too thin to climb out of
+    // (both used to be 50/50 everywhere: in an open two-floor room it hung in mid-air ~4 m up; on a deck it poked out under the slab)
+    const c = gy ? 'Jump_From_The_Ceiling' : dy > 1.5 ? 'Out_Of_Ground' : Math.random() < .5 ? 'Out_Of_Ground' : 'Jump_From_The_Ceiling';
+    m.intro = {c, t0: clock, dy: c === 'Out_Of_Ground' ? 0 : clamp(dy, 0, 1.5)};
+    if (c === 'Out_Of_Ground') { addDecal(x, z, 1.5, [.05, .045, .04], gy); sparks([x, gy + .05, z], 10, [.75, .7, .6], 2.5);   // the floor breaks open
+      for (let i = 0; i < 6; i++) spawn({pos: [x + rand(-.5, .5), gy + .1, z + rand(-.5, .5)], vel: [rand(-.6, .6), rand(.6, 1.6), rand(-.6, .6)], life: rand(1, 1.8), kind: 3, w0: .3, w1: 1.3, tint: [.42, .4, .38], drag: 1.5, er0: .1, er1: 1}); }
+    else for (let i = 0; i < 8; i++) spawn({pos: [x + rand(-.6, .6), top - .05, z + rand(-.6, .6)], vel: [0, rand(-1.2, -.3), 0], grav: -4, life: rand(.6, 1.2), kind: 3, w0: .12, w1: .5, tint: [.45, .43, .4], drag: 1, er0: .1, er1: 1});   // dust from the ceiling
+    return; }
+  // the purple flash: at the feet for walkers; a flyer (bat) appears where it hovers (it used to flash on the floor under it)
+  const fy = T.fly ? gy + T.fly + (T.y0 || 0) + T.h * .5 : 0;
+  spawn({pos: [x, fy || gy + .15, z], life: .6, kind: 5, w0: .3, w1: T.fly ? 1.6 : 2.4, tint: [.8, .25, 1]});
+  spawn({pos: [x, fy || gy + 1, z], life: .4, kind: 0, w0: T.fly ? 1.6 : 2.4, tint: [.7, .2, 1]});
 }
 // --- RoboKill room flow: step 1 cell inside an uncleared room -> its doors shut, waves come, all dead -> doors open
 function lockRoom(r) {
@@ -1510,6 +1557,7 @@ function updateRoom(dt) {
       m.used = true; PL.hp = Math.min(100, PL.hp + 50); say('MEDIPACK +50'); playSound(SND('snd_heal'), .8); spawn({pos: [EYE[0], EYE[1] - .3, EYE[2]], life: .5, kind: 0, w0: 2, tint: [.2, 1, .3]}); } }
   const i = Math.floor(EYE[0]), j = Math.floor(EYE[2]), here = LV.here = LV.rooms[LV.roomOf[j * GW + i]];
   // lock once you are anywhere inside (along the walls too) and clear of every doorway, so no door can shut on you
+  // (it used to need you 1 cell in from the walls: walking along a room's edge never locked it)
   const clear = here && here.doors.every(d => d.cells.every(([a, b]) => Math.hypot(EYE[0] - clamp(EYE[0], a, a + 1), EYE[2] - clamp(EYE[2], b, b + 1)) > .6));
   if (here && here.state === 'idle' && !PL.dead && clear) lockRoom(here);
   if (PL.won && (PL.won -= dt) <= 0) startLevel('deck-' + Math.random().toString(36).slice(2, 7));
@@ -1544,6 +1592,8 @@ function startLevel(seed, again = false) {   // a fresh deck, or (again) the sam
     const W2 = T0.W2, a = W2(8.5, 13.5), f = W2(8.5, 12.5); EYE = [a[0], 1.62, a[1]]; yaw = Math.atan2(f[0] - a[0], -(f[1] - a[1]));
     [[9, 10.5, 0], [6, 8, 0], [9.5, 3, HI]].forEach(([u, v, y], k) => { const q = W2(u, v); TARGETS[k].pos = [q[0], y, q[1]]; });
   }
+  for (const t of TARGETS) { const k = Math.floor(t.pos[2]) * GW + Math.floor(t.pos[0]);   // dummies block like crates (paths go round);
+    if (!t.pos[1] && LV.grid[k] === FLOOR) { LV.grid[k] = CRATE; LV.ver++; t.pos = [Math.floor(t.pos[0]) + .5, 0, Math.floor(t.pos[2]) + .5]; } }   // centred on its cell; the one up on the deck: its body only (separate)
   $('seed').value = seed; if (document.activeElement) document.activeElement.blur();   // Space must fire, not re-click a button
 }
 let msg = {text: '', t: -9};
@@ -1588,6 +1638,7 @@ function killMon(m, d) {
   gibBurst(c, d, big, 4 + big * 3);
 }
 function corpseBox(m) {   // the final death pose, in the body's own frame (feet at y 0): skeleton bounds, or the box monster fallen back
+  // (a fixed square at the monster's feet missed most of the body: a zombie lies ~3 m behind where it stood, a brute ~4 m)
   const T = m.T, R = T.rig; let lo, hi;
   if (R) {
     const {pts, fall, lie} = rigPose(m, R, 1); let mm = M.S(T.scale, T.scale, T.scale);   // same grounding as drawRig
@@ -1611,17 +1662,19 @@ function separate() {   // hard bodies after everyone moved: no two monsters ove
   // 4 relaxation passes; the bigger one moves less, one already striking holds its spot; then each moved body is wall-checked
   const B = mons.map(m => ({m, p: [m.pos[0], 0, m.pos[2]], r: m.T.r, gy: m.gy, fly: !!m.T.fly, im: (m.inR ? .15 : 1) / (m.T.r * m.T.r), mv: 0}));
   if (!PL.dead) B.push({p: [EYE[0], 0, EYE[2]], r: .35, gy: PL.gy, pl: 1, mv: 0});
+  for (const t of TARGETS) B.push({p: [t.pos[0], 0, t.pos[2]], r: .4, gy: t.pos[1], fly: false, fix: 1, mv: 0});   // shooting dummies: solid, never move
   for (let it = 0; it < 4; it++) for (let a = 0; a < B.length; a++) for (let b = a + 1; b < B.length; b++) {
     const A = B[a], O = B[b];
     if ((A.fly !== O.fly && !A.pl && !O.pl) || Math.abs(A.gy - O.gy) > 1) continue;   // bats only bump bats (and you)
     let dx = A.p[0] - O.p[0], dz = A.p[2] - O.p[2], l = Math.hypot(dx, dz); const R = A.r + O.r;
     if (l >= R) continue;
     if (l < 1e-4) { dx = Math.random() - .5; dz = Math.random() - .5; l = Math.hypot(dx, dz); }
-    const pm = moving ? 1 : 0, sa = O.pl ? 1 - pm * (1 - (SHOVE[A.m.T.name] || 0)) : A.pl ? pm * (1 - (SHOVE[O.m.T.name] || 0)) : A.im / (A.im + O.im), o = (R - l) / l;   // standing, you are a wall to them
+    if (A.fix && O.fix) continue;
+    const pm = moving ? 1 : 0, sa = O.fix ? 1 : A.fix ? 0 : O.pl ? 1 - pm * (1 - (SHOVE[A.m.T.name] || 0)) : A.pl ? pm * (1 - (SHOVE[O.m.T.name] || 0)) : A.im / (A.im + O.im), o = (R - l) / l;   // standing, you are a wall to them
     A.p[0] += dx * o * sa; A.p[2] += dz * o * sa; O.p[0] -= dx * o * (1 - sa); O.p[2] -= dz * o * (1 - sa); A.mv = O.mv = 1;
   }
-  for (const b of B) if (b.mv) {
-    pushOut(b.p, b.r, b.pl ? false : b.fly, b.gy);
+  for (const b of B) if (b.mv && !b.fix) {
+    pushOut(b.p, b.r, b.pl ? false : b.fly, b.gy);   // every pushed body is wall / pit checked again: separation alone shoved them into walls
     if (b.pl) { EYE[0] = b.p[0]; EYE[2] = b.p[2]; continue; }
     const m = b.m, gy = groundAt(b.p[0], b.p[2], m.gy); m.pos = [b.p[0], m.pos[1] + gy - m.gy, b.p[2]]; m.gy = gy;
   }
@@ -1644,14 +1697,16 @@ function updateHorde(dt) {
   }
   for (const m of mons) {
     m.flash = Math.max(0, m.flash - dt * 6);
-    if (m.intro) { if (clock - m.intro.t0 < CRAWL.clips[m.intro.c].len) { m.vf = 0; continue; } m.intro = null; }   // entrance: no moving or striking yet
+    if (m.intro) { if (clock - m.intro.t0 < CRAWL.clips[m.intro.c].len) { m.vf = 0; continue; }   // entrance: no moving or striking yet
+      if (m.intro.c !== 'Out_Of_Ground') for (let i = 0; i < 7; i++) spawn({pos: [m.pos[0] + rand(-.4, .4), m.gy + .1, m.pos[2] + rand(-.4, .4)], vel: [rand(-1.5, 1.5), rand(.2, .7), rand(-1.5, 1.5)], life: rand(.8, 1.4), kind: 3, w0: .3, w1: 1.1, tint: [.45, .43, .4], drag: 2, er0: .1, er1: 1});   // landing dust
+      m.intro = null; }
     if (m.T.anim && CRAWL && !m.seen && (m.seen = m.inR || sight(m.pos, me, m.T.r, false, m.gy, PL.gy)) && !m.inR) { m.shout = clock; sndAt(SND('snd_roar'), 1, m.pos); }   // first sight: a roar (not if already on you)
     if (m.shout && clock - m.shout < CRAWL.clips.Shout.len / 1.3 - .3) { m.vf = 0; m.yaw += wrapA(Math.atan2(EYE[0] - m.pos[0], EYE[2] - m.pos[2]) - m.yaw) * (1 - Math.exp(-6 * dt)); continue; }
     const fly = !!m.T.fly, to = sub(me, m.pos), dist = Math.hypot(to[0], to[2]); to[1] = 0;
     // reach with hysteresis: it stops ~0.8 m out (claws short of your face) and keeps striking until you are 0.35 m further;
     // without the gap it toggled walk / attack every frame at the edge (the flicker)
     const reach = m.T.r + .8, near = Math.abs(m.gy - PL.gy) < 1.2;
-    m.inR = near && dist < reach + (m.inR ? .35 : 0);   // also while you lie dead: they stay put over you instead of milling about
+    m.inR = near && dist < reach + (m.inR ? .35 : 0);   // also while you lie dead: they stay put over you instead of milling about (no !PL.dead here: it made them flicker)
     let v = [0, 0, 0];
     if (!m.inR) {   // straight at you when the way is clear, else follow the path field
       let dir;
@@ -1675,7 +1730,6 @@ function updateHorde(dt) {
     }
     const ty = Math.atan2(...(len(v) > .05 && m.atk < .5 ? [v[0], v[2]] : [to[0], to[2]])), dy = ty - m.yaw;
     m.yaw += Math.atan2(Math.sin(dy), Math.cos(dy)) * (1 - Math.exp(-10 * dt));   // turn smoothly
-    for (const t of TARGETS) { const dd = sub(m.pos, t.pos), l = Math.hypot(dd[0], dd[2]), R = m.T.r + .35; dd[1] = 0; if (l < R && l > 1e-4) v = madd(v, dd, (R - l) / l * 6); }
     m.kb = mul(m.kb, Math.exp(-5 * dt));
     const p = [m.pos[0], 0, m.pos[2]]; moveCircle(p, add(v, m.kb), dt, m.T.r, fly || (len(m.kb) > 2.5 ? 2 : false), m.gy);   // a hard hit can shove it into a pit
     m.gy = groundAt(p[0], p[2], m.gy);
@@ -1784,6 +1838,7 @@ async function loadGLB(f) {
 const tenAlong = (a, b, l) => madd(a, norm(sub(b, a)), l), lerp3 = (a, b, t) => madd(a, sub(b, a), t);
 const stepK = (ph, S, lift) => { const u = ((ph / 6.2832) % 1 + 1) % 1, w = u * 2 - 1;   // -> [lift, fwd]: stance slides back, swing arcs forward
   return u < .5 ? [0, S / 2 - S * u * 2] : [lift * Math.sin(Math.PI * w), -S / 2 + S * smooth(w)]; };
+const BAT_FLAP = [.35, 1.25], BAT_SWEEP = [-.83, -.855], BAT_LAG = .88, BAT_TILT = Math.PI / 4;   // wing [mean, amplitude] / [arm, hand] rad, hand lag in beats, body tilt
 const ANIM = {   // fill o.off / o.root / o.L (local bone rotations) / o.tg (limb targets) / o.fall; d = death 0..1
   troll(m, o, d) {
     const ph = m.phase, a = m.atk * (1 - d), S = m.T.speed * Math.PI / m.T.step / m.T.scale, big = m.T === MT[3];
@@ -1811,15 +1866,22 @@ const ANIM = {   // fill o.off / o.root / o.L (local bone rotations) / o.tg (lim
     }
   },
   spider(m, o, d) {
+    // attack, one cycle per blow (HIT_T.spider), the strike landing with the damage (.35 s after contact, then every blow):
+    // rear back and up, front pair raised high and spread, second pair lifted (threat) -> lunge forward-down, both front legs
+    // stab in -> recover. Was: a slow rear-up with the front legs stabbing in turn, not tied to the blows.
     const ph = m.phase, a = m.atk, vf = Math.min(1.3, m.vf || 0), S = vf * m.T.speed * Math.PI / (m.T.step * (vf + .15)) / m.T.scale, lift = .12 * Math.min(1, vf * 3);
-    o.off = [0, .015 * Math.sin(ph * 2) + .1 * a, 0]; o.root = M.R(0, -.5 * a); o.L.abdomen = M.R(0, Math.sin(ph * 2) * .05);   // rears up to attack
+    if (a > 0) { if (m.aB === undefined) m.aB = m.atkT; } else m.aB = undefined;
+    const HT = HIT_T.spider, u = a > 0 ? (((m.atkT - m.aB - .05) / HT) % 1 + 1) % 1 : 0;
+    const rear = a * (ease(u, 0, .45) - ease(u, .45, .55)), lunge = a * (ease(u, .45, .55) - ease(u, .62, 1));
+    o.off = [0, .015 * Math.sin(ph * 2) + .14 * rear - .03 * lunge, -.1 * rear + .2 * lunge];
+    o.root = M.R(0, -.65 * rear + .3 * lunge); o.L.abdomen = M.R(0, Math.sin(ph * 2) * .05 + .35 * rear - .15 * lunge);   // abdomen tips up as it rears
     for (const c of o.ch) {
       const st = stepK(ph + ((c.i + (c.s > 0 ? 0 : 1)) % 2) * Math.PI, S, lift), H = c.home;
       let p = add(H, [0, st[0], st[1]]);
-      if (c.i === 0 && a > 0) {   // front pair stabs in turn
-        const k = (m.atkT * 2.4 + (c.s > 0 ? 0 : .5)) % 1, up = [H[0] * .8, .75, H[2] * .9];
-        p = lerp3(p, lerp3(lerp3(up, [H[0] * .35, .12, H[2] * 1.15], ease(k, .55, .7)), up, ease(k, .75, 1)), a);
-      }
+      if (c.i === 0 && a > 0) {   // front pair: raised, spread, then both stab in front of it
+        const up = [H[0] * 1.15, .85, H[2] * .85], hit = [H[0] * .4, .08, H[2] * 1.3];
+        p = lerp3(lerp3(p, up, rear), hit, lunge);
+      } else if (c.i === 1) p = add(p, [0, .3 * rear, .08 * rear]);   // second pair lifts a little (threat display)
       o.tg[c.name] = d ? lerp3(m.tgLast[c.name] || p, [H[0] * .3, .45, H[2] * .3 + .05], d) : p;   // dying: legs curl in...
     }
     if (d) o.fall = M.R(2, Math.PI * d);   // ...and it flips onto its back
@@ -1847,12 +1909,17 @@ const ANIM = {   // fill o.off / o.root / o.L (local bone rotations) / o.tg (lim
     for (let i = 0; i < 5; i++) o.L['tail' + i] = M.mul(M.R(1, .07 * mv * Math.sin(ph - .8 - i * .7)), M.R(0, .04 * run * mv * Math.cos(2 * ph - i * .6) - .12 * d));   // lagging balance wave; droops dead
     if (d) { o.fall = M.id(); o.lie = .04; }   // no roll: stays belly-down, ground fix + sinking only
   },
-  bat(m, o, d) {   // no limbs to IK: wings flap by FK, the tip trails the inner wing. Dying: wings fold, it flips onto its back
-    const e = 1 - d, f = Math.sin(m.phase) * e, g = Math.sin(m.phase - .7) * e;
-    o.off = [0, .04 * Math.cos(m.phase) * e, 0];
-    o.L['wing.L0'] = M.R(2, .55 * f + .9 * d); o.L['wing.L1'] = M.R(2, .45 * g + 1.4 * d);
-    o.L['wing.R0'] = M.R(2, -.55 * f - .9 * d); o.L['wing.R1'] = M.R(2, -.45 * g - 1.4 * d);
-    if (d) { o.fall = M.R(2, Math.PI * d); o.lie = .03; }
+  bat(m, o, d) {   // hovers tilted 45 deg nose-up; wings by FK: FLAP (up / down) + SWEEP (arm fore-aft, the hand lagging BAT_LAG beats)
+    // Dying: a few weakening beats while it drops from its hover height (o.lie: how high the corpse is held above its floor),
+    // wings go limp half-folded, it tumbles onto its back. (Before: it flashed on the floor and simply flipped there.)
+    const lim = ease(d, .15, .8), a = m.phase / 6.2832 + d * 3, c = Math.cos(a * 6.2832), ch = Math.cos((a - BAT_LAG) * 6.2832);
+    const flap = mix(BAT_FLAP[0] + BAT_FLAP[1] * c * (1 - d), -.3, lim), arm = mix(-BAT_SWEEP[0] * c, .45, lim), hand = mix(BAT_SWEEP[1] * ch, 1.3, lim);
+    for (const [s, n] of [[1, 'L'], [-1, 'R']]) {
+      o.L['wing.' + n + '0'] = M.mul(M.aa([0, -s, 0], arm), M.aa([0, 0, s], flap)); o.L['wing.' + n + '1'] = M.aa([0, -s, 0], hand); }
+    o.off = [0, .04 * Math.cos(m.phase) * (1 - d), 0];
+    o.root = M.R(0, -BAT_TILT * (1 - .5 * m.atk) * (1 - d));   // nose up; it levels out half-way while it bites
+    if (d) { o.fall = M.mul(M.R(2, Math.PI * ease(d, .3, 1)), M.R(0, .4 * d));
+      o.lie = .03 + (1 - d * d) * Math.max(0, m.pos[1] - m.gy - .25); }   // falls (accelerating) from where it hovered
   },
 };
 /* ============================================================ 7d. the crawler: the zombie rig driven by the UE creature pack
@@ -1948,6 +2015,7 @@ function drawRig(m, base, ct, glow) {   // ct: seconds dead (-1 alive). A corpse
   let mm = M.mul(base, M.S(T.scale, T.scale, T.scale));
   if (fall) { mm = M.mul(mm, fall); const lo = Math.min(...pts.map(p => M.pt(mm, p)[1])); mm = M.mul(M.T(0, (lie ?? T.r * .3) + base[13] - lo - Math.max(0, ct - 8) * .5, 0), mm); }   // lies on its own floor
   else if (ct > 8) mm = M.mul(M.T(0, -(ct - 8) * .5, 0), mm);   // clip-driven deaths (crawler) lie as the clip left them: sink the same way
+  // (the sink used to live only in the fall branch: crawler corpses lay unshootable from 8 s and popped out of sight at 11 s)
   gl.uniform1i(MESH.u.uSkin, 1); gl.uniform1i(MESH.u.uTexOn, 1); gl.uniform1i(MESH.u.uTex, R.unit); gl.uniform1i(MESH.u.uNrmOn, R.nrm ? 1 : 0); gl.uniform1i(MESH.u.uNrm, R.unit + 3); gl.uniformMatrix4fv(MESH.u['uB[0]'], false, R.buf);
   gl.vertexAttrib3fv(2, T.tint); gl.vertexAttrib3f(3, 0, 0, .3);
   drawMesh(R, mm, glow);

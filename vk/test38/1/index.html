@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Crimson Deck</title>
+<style>
+html, body { margin: 0; height: 100%; overflow: hidden; background: #0b0c10; color: #cdd3dc; font: 12px monospace; }
+#c { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; }
+#map { position: fixed; right: 10px; top: 10px; width: min(42vh, 320px); display: none; opacity: .9; border: 1px solid #334; pointer-events: none; }
+#ui { position: fixed; left: 8px; bottom: 8px; padding: 6px 8px; background: #0b0c10c0; border: 1px solid #223; }
+.touch #ui { display: none; }
+.touch #map { width: 30vh; }   /* clear of the jump button */
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<canvas id="map" width="320" height="320"></canvas>
+<div id="ui">Weapon: <select id="list"></select> &nbsp; Seed: <input id="seed" size="12"> <button id="go">New deck</button> <button id="reset">Restart</button> <span id="note"></span><br>
+Click = capture mouse | WASD move | LMB/F fire | Space jump | C crouch | R reload | Q/E wheel 1-9 weapon | M map | N music | Esc release</div>
+<script src="app39.min1.js"></script>
+</body>
+</html>
